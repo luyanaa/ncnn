@@ -37,27 +37,27 @@
 #define CONVDW_PS2_SIMD 0
 #endif
 
-#define CONVDW_PS2_MAXK 64
+#define CONVDW_PS2_MAXK  64
 #define CONVDW_PS2_CHUNK 64
 
 // accumulator registers: $vf4..$vf7, tap temporaries: $vf10/$vf11/$vf12
 #if CONVDW_PS2_SIMD
-#define CONVDW_PS2_TAP_LOOP(CLASS, ACC)                                                                 \
-    {                                                                                                   \
-        const int c_ = CLASS;                                                                           \
-        for (int ii_ = 0; ii_ < cnt[c_]; ii_++)                                                         \
-        {                                                                                               \
-            int k_ = lst[c_][ii_];                                                                      \
-            const float* xp_ = inrow + j0 + c_ + space_ofs[k_] + 4 * t;                                 \
-            const float* wp_ = wbase + k_ * 4;                                                          \
-            __asm__ __volatile__(                                                                       \
-                "lqc2 $vf10, 0(%0)\n\t"                                                                 \
-                "lqc2 $vf11, 0(%1)\n\t"                                                                 \
-                "vmul.xyzw $vf12, $vf11, $vf10\n\t"                                                     \
-                "vadd.xyzw " ACC ", " ACC ", $vf12\n\t"                                                 \
-                :                                                                                       \
-                : "r"(xp_), "r"(wp_));                                                                  \
-        }                                                                                               \
+#define CONVDW_PS2_TAP_LOOP(CLASS, ACC)                                 \
+    {                                                                   \
+        const int c_ = CLASS;                                           \
+        for (int ii_ = 0; ii_ < cnt[c_]; ii_++)                         \
+        {                                                               \
+            int k_ = lst[c_][ii_];                                      \
+            const float* xp_ = inrow + j0 + c_ + space_ofs[k_] + 4 * t; \
+            const float* wp_ = wbase + k_ * 4;                          \
+            __asm__ __volatile__(                                       \
+                "lqc2 $vf10, 0(%0)\n\t"                                 \
+                "lqc2 $vf11, 0(%1)\n\t"                                 \
+                "vmul.xyzw $vf12, $vf11, $vf10\n\t"                     \
+                "vadd.xyzw " ACC ", " ACC ", $vf12\n\t"                 \
+                :                                                       \
+                : "r"(xp_), "r"(wp_));                                  \
+        }                                                               \
     }
 #endif
 
@@ -104,100 +104,120 @@ static const float convdw_ps2_mhi_tab[4][4] = {
 // (started as the bias vector), each tap contributes two VMADDA ops
 // (ACC += L^m(P)*w*Mlo_m, ACC += L^m(Q)*w*Mhi_m), and the finished group is
 // moved to $vf4 with a single VMADD (vf4 = ACC + zeros) before the SQC2.
-#define CONVDW_ROT_P3 "vmr32 $vf7, $vf5\n\t" "vmr32 $vf8, $vf7\n\t" "vmr32 $vf9, $vf8\n\t"
-#define CONVDW_ROT_Q3 "vmr32 $vf10, $vf6\n\t" "vmr32 $vf11, $vf10\n\t" "vmr32 $vf12, $vf11\n\t"
-#define CONVDW_ROT_P2 "vmr32 $vf7, $vf5\n\t" "vmr32 $vf8, $vf7\n\t"
-#define CONVDW_ROT_Q2 "vmr32 $vf10, $vf6\n\t" "vmr32 $vf11, $vf10\n\t"
+#define CONVDW_ROT_P3 "vmr32 $vf7, $vf5\n\t" \
+                      "vmr32 $vf8, $vf7\n\t" \
+                      "vmr32 $vf9, $vf8\n\t"
+#define CONVDW_ROT_Q3 "vmr32 $vf10, $vf6\n\t"  \
+                      "vmr32 $vf11, $vf10\n\t" \
+                      "vmr32 $vf12, $vf11\n\t"
+#define CONVDW_ROT_P2 "vmr32 $vf7, $vf5\n\t" \
+                      "vmr32 $vf8, $vf7\n\t"
+#define CONVDW_ROT_Q2 "vmr32 $vf10, $vf6\n\t" \
+                      "vmr32 $vf11, $vf10\n\t"
 
 // one kernel row = 3 taps with consecutive phases; WkL/WkH are the
 // pre-weighted mask registers (WkL = w*mask_lo, WkH = w*mask_hi)
-#define CONVDW_RUN0(PTR, W0L, W0H, W1L, W1H, W2L, W2H)   /* phases 0,1,2 */ \
-    "lqc2 $vf5, 0(" PTR ")\n\t" \
-    "lqc2 $vf6, 16(" PTR ")\n\t" \
-    CONVDW_ROT_P2 CONVDW_ROT_Q2 \
-    "vmadda.xyzw $ACC, $vf5, " W0L "\n\t" "vmadda.xyzw $ACC, $vf6, " W0H "\n\t" \
-    "vmadda.xyzw $ACC, $vf7, " W1L "\n\t" "vmadda.xyzw $ACC, $vf10, " W1H "\n\t" \
-    "vmadda.xyzw $ACC, $vf8, " W2L "\n\t" "vmadda.xyzw $ACC, $vf11, " W2H "\n\t"
+#define CONVDW_RUN0(PTR, W0L, W0H, W1L, W1H, W2L, W2H) /* phases 0,1,2 */ \
+    "lqc2 $vf5, 0(" PTR ")\n\t"                                           \
+    "lqc2 $vf6, 16(" PTR ")\n\t" CONVDW_ROT_P2 CONVDW_ROT_Q2              \
+    "vmadda.xyzw $ACC, $vf5, " W0L "\n\t"                                 \
+    "vmadda.xyzw $ACC, $vf6, " W0H "\n\t"                                 \
+    "vmadda.xyzw $ACC, $vf7, " W1L "\n\t"                                 \
+    "vmadda.xyzw $ACC, $vf10, " W1H "\n\t"                                \
+    "vmadda.xyzw $ACC, $vf8, " W2L "\n\t"                                 \
+    "vmadda.xyzw $ACC, $vf11, " W2H "\n\t"
 
-#define CONVDW_RUN1(PTR, W0L, W0H, W1L, W1H, W2L, W2H)   /* phases 1,2,3 */ \
-    "lqc2 $vf5, 0(" PTR ")\n\t" \
-    "lqc2 $vf6, 16(" PTR ")\n\t" \
-    CONVDW_ROT_P3 CONVDW_ROT_Q3 \
-    "vmadda.xyzw $ACC, $vf7, " W0L "\n\t" "vmadda.xyzw $ACC, $vf10, " W0H "\n\t" \
-    "vmadda.xyzw $ACC, $vf8, " W1L "\n\t" "vmadda.xyzw $ACC, $vf11, " W1H "\n\t" \
-    "vmadda.xyzw $ACC, $vf9, " W2L "\n\t" "vmadda.xyzw $ACC, $vf12, " W2H "\n\t"
+#define CONVDW_RUN1(PTR, W0L, W0H, W1L, W1H, W2L, W2H) /* phases 1,2,3 */ \
+    "lqc2 $vf5, 0(" PTR ")\n\t"                                           \
+    "lqc2 $vf6, 16(" PTR ")\n\t" CONVDW_ROT_P3 CONVDW_ROT_Q3              \
+    "vmadda.xyzw $ACC, $vf7, " W0L "\n\t"                                 \
+    "vmadda.xyzw $ACC, $vf10, " W0H "\n\t"                                \
+    "vmadda.xyzw $ACC, $vf8, " W1L "\n\t"                                 \
+    "vmadda.xyzw $ACC, $vf11, " W1H "\n\t"                                \
+    "vmadda.xyzw $ACC, $vf9, " W2L "\n\t"                                 \
+    "vmadda.xyzw $ACC, $vf12, " W2H "\n\t"
 
-#define CONVDW_RUN2(PTR, W0L, W0H, W1L, W1H, W2L, W2H)   /* phases 2,3,0 */ \
-    "lqc2 $vf5, 0(" PTR ")\n\t" \
-    "lqc2 $vf6, 16(" PTR ")\n\t" \
-    CONVDW_ROT_P3 CONVDW_ROT_Q3 \
-    "vmadda.xyzw $ACC, $vf8, " W0L "\n\t" "vmadda.xyzw $ACC, $vf11, " W0H "\n\t" \
-    "vmadda.xyzw $ACC, $vf9, " W1L "\n\t" "vmadda.xyzw $ACC, $vf12, " W1H "\n\t" \
-    "vmadda.xyzw $ACC, $vf6, " W2L "\n\t" "vmadda.xyzw $ACC, $vf5, " W2H "\n\t"
+#define CONVDW_RUN2(PTR, W0L, W0H, W1L, W1H, W2L, W2H) /* phases 2,3,0 */ \
+    "lqc2 $vf5, 0(" PTR ")\n\t"                                           \
+    "lqc2 $vf6, 16(" PTR ")\n\t" CONVDW_ROT_P3 CONVDW_ROT_Q3              \
+    "vmadda.xyzw $ACC, $vf8, " W0L "\n\t"                                 \
+    "vmadda.xyzw $ACC, $vf11, " W0H "\n\t"                                \
+    "vmadda.xyzw $ACC, $vf9, " W1L "\n\t"                                 \
+    "vmadda.xyzw $ACC, $vf12, " W1H "\n\t"                                \
+    "vmadda.xyzw $ACC, $vf6, " W2L "\n\t"                                 \
+    "vmadda.xyzw $ACC, $vf5, " W2H "\n\t"
 
 /* phases 3,0,1: the last tap wraps past the second quadword, so a third
    aligned quad (Q2) is loaded and the phase-1 tap reads L(Q)/L(Q2) */
-#define CONVDW_RUN3(PTR, W0L, W0H, W1L, W1H, W2L, W2H)   /* phases 3,0,1 */ \
-    "lqc2 $vf5, 0(" PTR ")\n\t" \
-    "lqc2 $vf6, 16(" PTR ")\n\t" \
-    "lqc2 $vf7, 32(" PTR ")\n\t" \
-    "vmr32 $vf8, $vf5\n\t" \
-    "vmr32 $vf9, $vf8\n\t" \
-    "vmr32 $vf10, $vf9\n\t" \
-    "vmr32 $vf11, $vf6\n\t" \
-    "vmr32 $vf12, $vf11\n\t" \
-    "vmr32 $vf1, $vf12\n\t" \
-    "vmr32 $vf12, $vf7\n\t" \
-    "vmadda.xyzw $ACC, $vf10, " W0L "\n\t" "vmadda.xyzw $ACC, $vf1, " W0H "\n\t" \
-    "vmadda.xyzw $ACC, $vf6, " W1L "\n\t" "vmadda.xyzw $ACC, $vf5, " W1H "\n\t" \
-    "vmadda.xyzw $ACC, $vf11, " W2L "\n\t" "vmadda.xyzw $ACC, $vf12, " W2H "\n\t"
+#define CONVDW_RUN3(PTR, W0L, W0H, W1L, W1H, W2L, W2H) /* phases 3,0,1 */ \
+    "lqc2 $vf5, 0(" PTR ")\n\t"                                           \
+    "lqc2 $vf6, 16(" PTR ")\n\t"                                          \
+    "lqc2 $vf7, 32(" PTR ")\n\t"                                          \
+    "vmr32 $vf8, $vf5\n\t"                                                \
+    "vmr32 $vf9, $vf8\n\t"                                                \
+    "vmr32 $vf10, $vf9\n\t"                                               \
+    "vmr32 $vf11, $vf6\n\t"                                               \
+    "vmr32 $vf12, $vf11\n\t"                                              \
+    "vmr32 $vf1, $vf12\n\t"                                               \
+    "vmr32 $vf12, $vf7\n\t"                                               \
+    "vmadda.xyzw $ACC, $vf10, " W0L "\n\t"                                \
+    "vmadda.xyzw $ACC, $vf1, " W0H "\n\t"                                 \
+    "vmadda.xyzw $ACC, $vf6, " W1L "\n\t"                                 \
+    "vmadda.xyzw $ACC, $vf5, " W1H "\n\t"                                 \
+    "vmadda.xyzw $ACC, $vf11, " W2L "\n\t"                                \
+    "vmadda.xyzw $ACC, $vf12, " W2H "\n\t"
 
 // one output quadword: ACC = bias + all taps, then ACC -> $vf4, store
-#define CONVDW_GROUP(R0, R1, R2) \
-    "vmula.xyzw $ACC, $vf13, $vf2\n\t" \
-    CONVDW_RUN##R0("%[pp0]", "$vf14", "$vf15", "$vf16", "$vf17", "$vf18", "$vf19") \
-    CONVDW_RUN##R1("%[pp1]", "$vf20", "$vf21", "$vf22", "$vf23", "$vf24", "$vf25") \
-    CONVDW_RUN##R2("%[pp2]", "$vf26", "$vf27", "$vf28", "$vf29", "$vf30", "$vf31") \
-    "vmadd.xyzw $vf4, $vf3, $vf3\n\t" \
-    "sqc2 $vf4, 0(%[dst])\n\t"
+#define CONVDW_GROUP(R0, R1, R2)                                                                                             \
+    "vmula.xyzw $ACC, $vf13, $vf2\n\t" CONVDW_RUN##R0("%[pp0]", "$vf14", "$vf15", "$vf16", "$vf17", "$vf18", "$vf19")        \
+        CONVDW_RUN##R1("%[pp1]", "$vf20", "$vf21", "$vf22", "$vf23", "$vf24", "$vf25")                                       \
+            CONVDW_RUN##R2("%[pp2]", "$vf26", "$vf27", "$vf28", "$vf29", "$vf30", "$vf31") "vmadd.xyzw $vf4, $vf3, $vf3\n\t" \
+                                                                                           "sqc2 $vf4, 0(%[dst])\n\t"
 
 #define CONVDW_ROWFN(NAME, R0, R1, R2)                                                     \
-    static inline void NAME(const float* pp0_, const float* pp1_, const float* pp2_,        \
-                            float* dst_, int ngroups_, const float* mt_, const float* ht_,  \
-                            const float* bt_)                                               \
-    {                                                                                       \
-        register const float* pp0 __asm__("$16") = pp0_;                                    \
-        register const float* pp1 __asm__("$17") = pp1_;                                    \
-        register const float* pp2 __asm__("$18") = pp2_;                                    \
-        register float* dst __asm__("$19") = dst_;                                          \
-        register int ng __asm__("$20") = ngroups_;                                          \
-        __asm__ __volatile__(                                                               \
-            "lqc2 $vf13, 0(%[bt])\n\t"                                                      \
-            "lqc2 $vf2, 16(%[bt])\n\t"                                                      \
-            "lqc2 $vf3, 32(%[bt])\n\t"                                                      \
-            "lqc2 $vf14, 0(%[mt])\n\t"  "lqc2 $vf15, 0(%[ht])\n\t"                           \
-            "lqc2 $vf16, 16(%[mt])\n\t" "lqc2 $vf17, 16(%[ht])\n\t"                          \
-            "lqc2 $vf18, 32(%[mt])\n\t" "lqc2 $vf19, 32(%[ht])\n\t"                          \
-            "lqc2 $vf20, 48(%[mt])\n\t" "lqc2 $vf21, 48(%[ht])\n\t"                          \
-            "lqc2 $vf22, 64(%[mt])\n\t" "lqc2 $vf23, 64(%[ht])\n\t"                          \
-            "lqc2 $vf24, 80(%[mt])\n\t" "lqc2 $vf25, 80(%[ht])\n\t"                          \
-            "lqc2 $vf26, 96(%[mt])\n\t" "lqc2 $vf27, 96(%[ht])\n\t"                          \
-            "lqc2 $vf28, 112(%[mt])\n\t" "lqc2 $vf29, 112(%[ht])\n\t"                        \
-            "lqc2 $vf30, 128(%[mt])\n\t" "lqc2 $vf31, 128(%[ht])\n\t"                        \
-            "beq %[ng], $0, 2f\n\t"                                                          \
-            "1:\n\t"                                                                         \
-            CONVDW_GROUP(R0, R1, R2)                                                         \
-            "addiu %[pp0], %[pp0], 16\n\t"                                                   \
-            "addiu %[pp1], %[pp1], 16\n\t"                                                   \
-            "addiu %[pp2], %[pp2], 16\n\t"                                                   \
-            "addiu %[dst], %[dst], 16\n\t"                                                   \
-            "addiu %[ng], %[ng], -1\n\t"                                                     \
-            "bne %[ng], $0, 1b\n\t"                                                          \
-            "2:\n\t"                                                                         \
-            : [pp0] "+r"(pp0), [pp1] "+r"(pp1), [pp2] "+r"(pp2), [dst] "+r"(dst),             \
-              [ng] "+r"(ng)                                                                  \
-            : [mt] "r"(mt_), [ht] "r"(ht_), [bt] "r"(bt_)                                     \
-            : "memory");                                                                      \
+    static inline void NAME(const float* pp0_, const float* pp1_, const float* pp2_,       \
+                            float* dst_, int ngroups_, const float* mt_, const float* ht_, \
+                            const float* bt_)                                              \
+    {                                                                                      \
+        register const float* pp0 __asm__("$16") = pp0_;                                   \
+        register const float* pp1 __asm__("$17") = pp1_;                                   \
+        register const float* pp2 __asm__("$18") = pp2_;                                   \
+        register float* dst __asm__("$19") = dst_;                                         \
+        register int ng __asm__("$20") = ngroups_;                                         \
+        __asm__ __volatile__(                                                              \
+            "lqc2 $vf13, 0(%[bt])\n\t"                                                     \
+            "lqc2 $vf2, 16(%[bt])\n\t"                                                     \
+            "lqc2 $vf3, 32(%[bt])\n\t"                                                     \
+            "lqc2 $vf14, 0(%[mt])\n\t"                                                     \
+            "lqc2 $vf15, 0(%[ht])\n\t"                                                     \
+            "lqc2 $vf16, 16(%[mt])\n\t"                                                    \
+            "lqc2 $vf17, 16(%[ht])\n\t"                                                    \
+            "lqc2 $vf18, 32(%[mt])\n\t"                                                    \
+            "lqc2 $vf19, 32(%[ht])\n\t"                                                    \
+            "lqc2 $vf20, 48(%[mt])\n\t"                                                    \
+            "lqc2 $vf21, 48(%[ht])\n\t"                                                    \
+            "lqc2 $vf22, 64(%[mt])\n\t"                                                    \
+            "lqc2 $vf23, 64(%[ht])\n\t"                                                    \
+            "lqc2 $vf24, 80(%[mt])\n\t"                                                    \
+            "lqc2 $vf25, 80(%[ht])\n\t"                                                    \
+            "lqc2 $vf26, 96(%[mt])\n\t"                                                    \
+            "lqc2 $vf27, 96(%[ht])\n\t"                                                    \
+            "lqc2 $vf28, 112(%[mt])\n\t"                                                   \
+            "lqc2 $vf29, 112(%[ht])\n\t"                                                   \
+            "lqc2 $vf30, 128(%[mt])\n\t"                                                   \
+            "lqc2 $vf31, 128(%[ht])\n\t"                                                   \
+            "beq %[ng], $0, 2f\n\t"                                                        \
+            "1:\n\t" CONVDW_GROUP(R0, R1, R2) "addiu %[pp0], %[pp0], 16\n\t"               \
+                                              "addiu %[pp1], %[pp1], 16\n\t"               \
+                                              "addiu %[pp2], %[pp2], 16\n\t"               \
+                                              "addiu %[dst], %[dst], 16\n\t"               \
+                                              "addiu %[ng], %[ng], -1\n\t"                 \
+                                              "bne %[ng], $0, 1b\n\t"                      \
+                                              "2:\n\t"                                     \
+            : [pp0] "+r"(pp0), [pp1] "+r"(pp1), [pp2] "+r"(pp2), [dst] "+r"(dst),          \
+              [ng] "+r"(ng)                                                                \
+            : [mt] "r"(mt_), [ht] "r"(ht_), [bt] "r"(bt_)                                  \
+            : "memory");                                                                   \
     }
 
 // row variant = (phase of run 0, phase step between runs); runs use
@@ -225,23 +245,56 @@ static inline void convdw_ps2_3x3s1_row(const float* pp0, const float* pp1, cons
 {
     switch (m0 * 4 + d)
     {
-    case 0: cdw_ps2_row_0_0(pp0, pp1, pp2, dst, ngroups, mt, ht, bt); break;
-    case 1: cdw_ps2_row_0_1(pp0, pp1, pp2, dst, ngroups, mt, ht, bt); break;
-    case 2: cdw_ps2_row_0_2(pp0, pp1, pp2, dst, ngroups, mt, ht, bt); break;
-    case 3: cdw_ps2_row_0_3(pp0, pp1, pp2, dst, ngroups, mt, ht, bt); break;
-    case 4: cdw_ps2_row_1_0(pp0, pp1, pp2, dst, ngroups, mt, ht, bt); break;
-    case 5: cdw_ps2_row_1_1(pp0, pp1, pp2, dst, ngroups, mt, ht, bt); break;
-    case 6: cdw_ps2_row_1_2(pp0, pp1, pp2, dst, ngroups, mt, ht, bt); break;
-    case 7: cdw_ps2_row_1_3(pp0, pp1, pp2, dst, ngroups, mt, ht, bt); break;
-    case 8: cdw_ps2_row_2_0(pp0, pp1, pp2, dst, ngroups, mt, ht, bt); break;
-    case 9: cdw_ps2_row_2_1(pp0, pp1, pp2, dst, ngroups, mt, ht, bt); break;
-    case 10: cdw_ps2_row_2_2(pp0, pp1, pp2, dst, ngroups, mt, ht, bt); break;
-    case 11: cdw_ps2_row_2_3(pp0, pp1, pp2, dst, ngroups, mt, ht, bt); break;
-    case 12: cdw_ps2_row_3_0(pp0, pp1, pp2, dst, ngroups, mt, ht, bt); break;
-    case 13: cdw_ps2_row_3_1(pp0, pp1, pp2, dst, ngroups, mt, ht, bt); break;
-    case 14: cdw_ps2_row_3_2(pp0, pp1, pp2, dst, ngroups, mt, ht, bt); break;
-    case 15: cdw_ps2_row_3_3(pp0, pp1, pp2, dst, ngroups, mt, ht, bt); break;
-    default: break;
+    case 0:
+        cdw_ps2_row_0_0(pp0, pp1, pp2, dst, ngroups, mt, ht, bt);
+        break;
+    case 1:
+        cdw_ps2_row_0_1(pp0, pp1, pp2, dst, ngroups, mt, ht, bt);
+        break;
+    case 2:
+        cdw_ps2_row_0_2(pp0, pp1, pp2, dst, ngroups, mt, ht, bt);
+        break;
+    case 3:
+        cdw_ps2_row_0_3(pp0, pp1, pp2, dst, ngroups, mt, ht, bt);
+        break;
+    case 4:
+        cdw_ps2_row_1_0(pp0, pp1, pp2, dst, ngroups, mt, ht, bt);
+        break;
+    case 5:
+        cdw_ps2_row_1_1(pp0, pp1, pp2, dst, ngroups, mt, ht, bt);
+        break;
+    case 6:
+        cdw_ps2_row_1_2(pp0, pp1, pp2, dst, ngroups, mt, ht, bt);
+        break;
+    case 7:
+        cdw_ps2_row_1_3(pp0, pp1, pp2, dst, ngroups, mt, ht, bt);
+        break;
+    case 8:
+        cdw_ps2_row_2_0(pp0, pp1, pp2, dst, ngroups, mt, ht, bt);
+        break;
+    case 9:
+        cdw_ps2_row_2_1(pp0, pp1, pp2, dst, ngroups, mt, ht, bt);
+        break;
+    case 10:
+        cdw_ps2_row_2_2(pp0, pp1, pp2, dst, ngroups, mt, ht, bt);
+        break;
+    case 11:
+        cdw_ps2_row_2_3(pp0, pp1, pp2, dst, ngroups, mt, ht, bt);
+        break;
+    case 12:
+        cdw_ps2_row_3_0(pp0, pp1, pp2, dst, ngroups, mt, ht, bt);
+        break;
+    case 13:
+        cdw_ps2_row_3_1(pp0, pp1, pp2, dst, ngroups, mt, ht, bt);
+        break;
+    case 14:
+        cdw_ps2_row_3_2(pp0, pp1, pp2, dst, ngroups, mt, ht, bt);
+        break;
+    case 15:
+        cdw_ps2_row_3_3(pp0, pp1, pp2, dst, ngroups, mt, ht, bt);
+        break;
+    default:
+        break;
     }
 }
 
@@ -287,7 +340,7 @@ static inline void convdw_ps2_kernel_3x3s1(
                 float bvec[12] __attribute__((aligned(16)));
 
                 bvec[0] = bvec[1] = bvec[2] = bvec[3] = b;
-                bvec[4] = bvec[5] = bvec[6] = bvec[7] = 1.f; // ones
+                bvec[4] = bvec[5] = bvec[6] = bvec[7] = 1.f;   // ones
                 bvec[8] = bvec[9] = bvec[10] = bvec[11] = 0.f; // zeros
 
                 for (int r = 0; r < 3; r++)
@@ -360,9 +413,9 @@ static inline void convdw_ps2_kernel(
 #if CONVDW_PS2_SIMD
     // specialized vector path: 3x3, stride_w == 1, dilation_w == 1
     if (stride_w == 1 && kernel_w == 3 && kernel_h == 3 && dilation_w == 1 && maxk == 9
-        && outw > 0 && outh > 0
-        && ((uintptr_t)bottom & 15) == 0 && ((uintptr_t)weight_tm & 15) == 0
-        && ((uintptr_t)top & 15) == 0 && (incstep & 3) == 0 && (outcstep & 3) == 0)
+            && outw > 0 && outh > 0
+            && ((uintptr_t)bottom & 15) == 0 && ((uintptr_t)weight_tm & 15) == 0
+            && ((uintptr_t)top & 15) == 0 && (incstep & 3) == 0 && (outcstep & 3) == 0)
     {
         convdw_ps2_kernel_3x3s1(bottom, top, w, outw, outh, channels, incstep, outcstep,
                                 weight_tm, bias, stride_h, dilation_h);

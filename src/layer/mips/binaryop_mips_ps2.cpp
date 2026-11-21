@@ -92,13 +92,13 @@ static bool binary_op_cop2_supported(int op_type)
            || op_type == BinaryOp::Operation_MIN;
 }
 
-#define COP2_BINARY_OP(op, pa, pb, out)                                 \
-    __asm__ __volatile__(                                               \
-        "lqc2 $vf4, 0(%0)\n\t"                                          \
-        "lqc2 $vf5, 0(%1)\n\t" op "\n\t"                                \
-        "sqc2 $vf6, 0(%2)\n\t"                                          \
-        :                                                               \
-        : "r"(pa), "r"(pb), "r"(out)                                    \
+#define COP2_BINARY_OP(op, pa, pb, out)  \
+    __asm__ __volatile__(                \
+        "lqc2 $vf4, 0(%0)\n\t"           \
+        "lqc2 $vf5, 0(%1)\n\t" op "\n\t" \
+        "sqc2 $vf6, 0(%2)\n\t"           \
+        :                                \
+        : "r"(pa), "r"(pb), "r"(out)     \
         : "memory")
 
 static void binary_op_vector_cop2(const float* pa, const float* pb, float* out, int size, int op_type)

@@ -27,13 +27,13 @@ extern u32 VU1Gemm_CodeEnd __attribute__((section(".vudata")));
 #define VU1_GEMM_HEADER_QWORD 1023
 
 /* VU1 data memory, IO-mapped on the EE bus. 16 qwords per float quad. */
-#define VU1_DATA_MEM ((volatile u32 *)0x1100c000)
-#define VIF1_STAT    (*(volatile u32 *)0x10003c00)
+#define VU1_DATA_MEM  ((volatile u32*)0x1100c000)
+#define VIF1_STAT     (*(volatile u32*)0x10003c00)
 #define VIF1_STAT_VEW (1 << 2)
 
 /* stage: A columns (K qwords) + B rows (K qwords) + header (1 qword) */
 static u32 vu1_gemm_stage[VU1_GEMM_MAX_K * 4 * 2 + 4] __attribute__((aligned(16)));
-static packet2_t *vu1_gemm_packet;
+static packet2_t* vu1_gemm_packet;
 static int vu1_gemm_ready;
 
 int ps2_vu1_gemm_init(void)
@@ -62,10 +62,10 @@ int ps2_vu1_gemm_init(void)
     return 0;
 }
 
-int ps2_vu1_gemm_4xKx4(const float *A, const float *B, float *C, int K)
+int ps2_vu1_gemm_4xKx4(const float* A, const float* B, float* C, int K)
 {
     int k, i, j, kp;
-    volatile u32 *vu_mem = VU1_DATA_MEM;
+    volatile u32* vu_mem = VU1_DATA_MEM;
     u32 guard;
 
     if (!vu1_gemm_ready)
@@ -114,8 +114,7 @@ int ps2_vu1_gemm_4xKx4(const float *A, const float *B, float *C, int K)
     /* Read C[i][0..3] from VU1 data memory qwords 512..515. */
     for (i = 0; i < 4; i++)
         for (j = 0; j < 4; j++)
-            C[i * 4 + j] =
-                *(const volatile float *)&vu_mem[((VU1_GEMM_C_QWORD + i) << 2) + j];
+            C[i * 4 + j] = *(const volatile float*)&vu_mem[((VU1_GEMM_C_QWORD + i) << 2) + j];
 
     return 0;
 }

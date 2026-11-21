@@ -58,10 +58,10 @@ int ReLU_mips_ps2::forward_inplace(Mat& bottom_top_blob, const Option& opt) cons
                         "lqc2 $vf4, 0(%0)\n\t"
                         "lqc2 $vf5, 0(%1)\n\t"
                         "lqc2 $vf8, 0(%3)\n\t"
-                        "vmax.xyzw $vf6, $vf4, $vf5\n\t" // vf6 = max(p, 0)
+                        "vmax.xyzw $vf6, $vf4, $vf5\n\t"  // vf6 = max(p, 0)
                         "vmini.xyzw $vf7, $vf4, $vf5\n\t" // vf7 = min(p, 0)
-                        "vmul.xyzw $vf7, $vf7, $vf8\n\t" // vf7 = slope * neg
-                        "vadd.xyzw $vf6, $vf6, $vf7\n\t" // vf6 = pos + slope * neg
+                        "vmul.xyzw $vf7, $vf7, $vf8\n\t"  // vf7 = slope * neg
+                        "vadd.xyzw $vf6, $vf6, $vf7\n\t"  // vf6 = pos + slope * neg
                         "sqc2 $vf6, 0(%2)\n\t"
                         :
                         : "r"(ptr), "r"(zero4), "r"(ptr), "r"(slope4buf)

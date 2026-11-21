@@ -79,18 +79,18 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_lq(const void*
 {
     uint32x4_t r;
     __asm__ __volatile__("lq %0, 0(%1)"
-            : "=&r"(r)
-            : "r"(p), "m"(*(const uint32x4_t*)p)
-            : "memory");
+                         : "=&r"(r)
+                         : "r"(p), "m"(*(const uint32x4_t*)p)
+                         : "memory");
     return r;
 }
 
 static inline __attribute__((__always_inline__)) void __mmi_sq(void* p, uint32x4_t v)
 {
     __asm__ __volatile__("sq %1, 0(%2)"
-            : "+m"(*(uint32x4_t*)p)
-            : "r"(v), "r"(p)
-            : "memory");
+                         : "+m"(*(uint32x4_t*)p)
+                         : "r"(v), "r"(p)
+                         : "memory");
 }
 
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_lq_u(const void* p)
@@ -106,18 +106,22 @@ static inline __attribute__((__always_inline__)) void __mmi_sq_u(void* p, uint32
 }
 
 // ----------------------------- add / sub (plain) -----------------------------
-#define __PS2_MMI_BINOP(name, asm_op)                                        \
+#define __PS2_MMI_BINOP(name, asm_op)                                                                \
     static inline __attribute__((__always_inline__)) uint32x4_t name##_u(uint32x4_t a, uint32x4_t b) \
-    {                                                                        \
-        uint32x4_t r;                                                        \
-        __asm__(asm_op " %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));              \
-        return r;                                                            \
-    }                                                                        \
-    static inline __attribute__((__always_inline__)) int32x4_t name##_s(int32x4_t a, int32x4_t b) \
-    {                                                                        \
-        int32x4_t r;                                                         \
-        __asm__(asm_op " %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));              \
-        return r;                                                            \
+    {                                                                                                \
+        uint32x4_t r;                                                                                \
+        __asm__(asm_op " %0,%1,%2"                                                                   \
+                : "=r"(r)                                                                            \
+                : "r"(a), "r"(b));                                                                   \
+        return r;                                                                                    \
+    }                                                                                                \
+    static inline __attribute__((__always_inline__)) int32x4_t name##_s(int32x4_t a, int32x4_t b)    \
+    {                                                                                                \
+        int32x4_t r;                                                                                 \
+        __asm__(asm_op " %0,%1,%2"                                                                   \
+                : "=r"(r)                                                                            \
+                : "r"(a), "r"(b));                                                                   \
+        return r;                                                                                    \
     }
 
 __PS2_MMI_BINOP(__mmi_paddb, "paddb")
@@ -130,12 +134,14 @@ __PS2_MMI_BINOP(__mmi_psubw, "psubw")
 // ----------------------------- saturating add / sub -----------------------------
 // assembler names: paddsb/paddsh/paddsw (signed saturating),
 // paddub/padduh/padduw (unsigned saturating), likewise for psub
-#define __PS2_MMI_SATOP(name, asm_op, T)                                     \
-    static inline __attribute__((__always_inline__)) T name(T a, T b)        \
-    {                                                                        \
-        T r;                                                                 \
-        __asm__(asm_op " %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));              \
-        return r;                                                            \
+#define __PS2_MMI_SATOP(name, asm_op, T)                              \
+    static inline __attribute__((__always_inline__)) T name(T a, T b) \
+    {                                                                 \
+        T r;                                                          \
+        __asm__(asm_op " %0,%1,%2"                                    \
+                : "=r"(r)                                             \
+                : "r"(a), "r"(b));                                    \
+        return r;                                                     \
     }
 
 __PS2_MMI_SATOP(__mmi_paddsb_s, "paddsb", int32x4_t)
@@ -158,7 +164,10 @@ __PS2_MMI_SATOP(__mmi_psubuw_u, "psubuw", uint32x4_t)
 static inline __attribute__((__always_inline__)) int32x4_t __mmi_pmultw(int32x4_t a, int32x4_t b)
 {
     int32x4_t r;
-    __asm__("pmultw %0,%1,%2" : "=r"(r) : "r"(a), "r"(b) : "$hi", "$lo");
+    __asm__("pmultw %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b)
+            : "$hi", "$lo");
     return r;
 }
 
@@ -166,7 +175,10 @@ static inline __attribute__((__always_inline__)) int32x4_t __mmi_pmultw(int32x4_
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmultuw(uint32x4_t a, uint32x4_t b)
 {
     uint32x4_t r;
-    __asm__("pmultuw %0,%1,%2" : "=r"(r) : "r"(a), "r"(b) : "$hi", "$lo");
+    __asm__("pmultuw %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b)
+            : "$hi", "$lo");
     return r;
 }
 
@@ -174,7 +186,10 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmultuw(uint32
 static inline __attribute__((__always_inline__)) int32x4_t __mmi_pmulth(int16x8_t a, int16x8_t b)
 {
     int32x4_t r;
-    __asm__("pmulth %0,%1,%2" : "=r"(r) : "r"(a), "r"(b) : "$hi", "$lo");
+    __asm__("pmulth %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b)
+            : "$hi", "$lo");
     return r;
 }
 
@@ -184,7 +199,10 @@ static inline __attribute__((__always_inline__)) int32x4_t __mmi_pmulth(int16x8_
 // product are accumulated into LO/HI (see __mmi_pmfhi/__mmi_pmflo).
 static inline __attribute__((__always_inline__)) int32x4_t __mmi_pmaddw(int32x4_t acc, int32x4_t a, int32x4_t b)
 {
-    __asm__("pmaddw %0,%1,%2" : "+r"(acc) : "r"(a), "r"(b) : "$hi", "$lo");
+    __asm__("pmaddw %0,%1,%2"
+            : "+r"(acc)
+            : "r"(a), "r"(b)
+            : "$hi", "$lo");
     return acc;
 }
 
@@ -193,7 +211,10 @@ static inline __attribute__((__always_inline__)) int32x4_t __mmi_pmaddw(int32x4_
 // the updated LO/HI sums), so the destination is also an input.
 static inline __attribute__((__always_inline__)) int32x4_t __mmi_pmaddh(int32x4_t acc, int16x8_t a, int16x8_t b)
 {
-    __asm__("pmaddh %0,%1,%2" : "+r"(acc) : "r"(a), "r"(b) : "$hi", "$lo");
+    __asm__("pmaddh %0,%1,%2"
+            : "+r"(acc)
+            : "r"(a), "r"(b)
+            : "$hi", "$lo");
     return acc;
 }
 
@@ -201,7 +222,10 @@ static inline __attribute__((__always_inline__)) int32x4_t __mmi_pmaddh(int32x4_
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmadduw(uint32x4_t a, uint32x4_t b)
 {
     uint32x4_t r;
-    __asm__("pmadduw %0,%1,%2" : "=&r"(r) : "r"(a), "r"(b) : "$hi", "$lo");
+    __asm__("pmadduw %0,%1,%2"
+            : "=&r"(r)
+            : "r"(a), "r"(b)
+            : "$hi", "$lo");
     return r;
 }
 
@@ -210,13 +234,15 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmadduw(uint32
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmfhi()
 {
     uint32x4_t r;
-    __asm__("pmfhi %0" : "=&r"(r));
+    __asm__("pmfhi %0"
+            : "=&r"(r));
     return r;
 }
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmflo()
 {
     uint32x4_t r;
-    __asm__("pmflo %0" : "=&r"(r));
+    __asm__("pmflo %0"
+            : "=&r"(r));
     return r;
 }
 
@@ -225,12 +251,14 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmflo()
 // operands into the full 128-bit register (im2col / widening primitive).
 // PEXTUB/UH/UW: same for the high halves.
 // (exact source-lane order: consult the EE Core Instruction Manual)
-#define __PS2_MMI_EXT2(name, asm_op, Td, Ta, Tb)                             \
-    static inline __attribute__((__always_inline__)) Td name(Ta a, Tb b)     \
-    {                                                                        \
-        Td r;                                                                \
-        __asm__(asm_op " %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));              \
-        return r;                                                            \
+#define __PS2_MMI_EXT2(name, asm_op, Td, Ta, Tb)                         \
+    static inline __attribute__((__always_inline__)) Td name(Ta a, Tb b) \
+    {                                                                    \
+        Td r;                                                            \
+        __asm__(asm_op " %0,%1,%2"                                       \
+                : "=r"(r)                                                \
+                : "r"(a), "r"(b));                                       \
+        return r;                                                        \
     }
 
 __PS2_MMI_EXT2(__mmi_pextlb_s, "pextlb", int16x8_t, int8x16_t, int8x16_t)
@@ -250,7 +278,9 @@ __PS2_MMI_EXT2(__mmi_pextuw_u, "pextuw", uint32x4_t, uint32x4_t, uint32x4_t)
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pcpyld(uint32x4_t a, uint32x4_t b)
 {
     uint32x4_t r;
-    __asm__("pcpyld %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));
+    __asm__("pcpyld %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b));
     return r;
 }
 
@@ -258,7 +288,9 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pcpyld(uint32x
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pcpyud(uint32x4_t a, uint32x4_t b)
 {
     uint32x4_t r;
-    __asm__("pcpyud %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));
+    __asm__("pcpyud %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b));
     return r;
 }
 
@@ -266,7 +298,9 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pcpyud(uint32x
 static inline __attribute__((__always_inline__)) int16x8_t __mmi_pinth(int16x8_t a, int16x8_t b)
 {
     int16x8_t r;
-    __asm__("pinth %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));
+    __asm__("pinth %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b));
     return r;
 }
 
@@ -274,7 +308,9 @@ static inline __attribute__((__always_inline__)) int16x8_t __mmi_pinth(int16x8_t
 static inline __attribute__((__always_inline__)) int16x8_t __mmi_prevh(int16x8_t a)
 {
     int16x8_t r;
-    __asm__("prevh %0,%1" : "=r"(r) : "r"(a));
+    __asm__("prevh %0,%1"
+            : "=r"(r)
+            : "r"(a));
     return r;
 }
 
@@ -282,7 +318,9 @@ static inline __attribute__((__always_inline__)) int16x8_t __mmi_prevh(int16x8_t
 static inline __attribute__((__always_inline__)) int32x4_t __mmi_prot3w(int32x4_t a)
 {
     int32x4_t r;
-    __asm__("prot3w %0,%1" : "=r"(r) : "r"(a));
+    __asm__("prot3w %0,%1"
+            : "=r"(r)
+            : "r"(a));
     return r;
 }
 
@@ -295,23 +333,29 @@ static inline __attribute__((__always_inline__)) int32x4_t __mmi_prot3w(int32x4_
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_qfsrv(uint32x4_t a, uint32x4_t b)
 {
     uint32x4_t r;
-    __asm__("qfsrv %0,%1,%2" : "=&r"(r) : "r"(a), "r"(b));
+    __asm__("qfsrv %0,%1,%2"
+            : "=&r"(r)
+            : "r"(a), "r"(b));
     return r;
 }
 
 // ----------------------------- compare (assembler: pceq*/pcgt*) -----------------------------
-#define __PS2_MMI_CMPOP(name, asm_op)                                        \
+#define __PS2_MMI_CMPOP(name, asm_op)                                                                \
     static inline __attribute__((__always_inline__)) uint32x4_t name##_u(uint32x4_t a, uint32x4_t b) \
-    {                                                                        \
-        uint32x4_t r;                                                        \
-        __asm__(asm_op " %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));              \
-        return r;                                                            \
-    }                                                                        \
-    static inline __attribute__((__always_inline__)) int32x4_t name##_s(int32x4_t a, int32x4_t b) \
-    {                                                                        \
-        int32x4_t r;                                                         \
-        __asm__(asm_op " %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));              \
-        return r;                                                            \
+    {                                                                                                \
+        uint32x4_t r;                                                                                \
+        __asm__(asm_op " %0,%1,%2"                                                                   \
+                : "=r"(r)                                                                            \
+                : "r"(a), "r"(b));                                                                   \
+        return r;                                                                                    \
+    }                                                                                                \
+    static inline __attribute__((__always_inline__)) int32x4_t name##_s(int32x4_t a, int32x4_t b)    \
+    {                                                                                                \
+        int32x4_t r;                                                                                 \
+        __asm__(asm_op " %0,%1,%2"                                                                   \
+                : "=r"(r)                                                                            \
+                : "r"(a), "r"(b));                                                                   \
+        return r;                                                                                    \
     }
 
 __PS2_MMI_CMPOP(__mmi_pcmpeqb, "pceqb")
@@ -325,36 +369,46 @@ __PS2_MMI_CMPOP(__mmi_pcmpgtw, "pcgtw")
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pand(uint32x4_t a, uint32x4_t b)
 {
     uint32x4_t r;
-    __asm__("pand %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));
+    __asm__("pand %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b));
     return r;
 }
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_por(uint32x4_t a, uint32x4_t b)
 {
     uint32x4_t r;
-    __asm__("por %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));
+    __asm__("por %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b));
     return r;
 }
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pxor(uint32x4_t a, uint32x4_t b)
 {
     uint32x4_t r;
-    __asm__("pxor %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));
+    __asm__("pxor %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b));
     return r;
 }
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pnor(uint32x4_t a, uint32x4_t b)
 {
     uint32x4_t r;
-    __asm__("pnor %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));
+    __asm__("pnor %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b));
     return r;
 }
 
 // ----------------------------- shifts -----------------------------
 // immediate shifts (0..31 for w, 0..15 for h); statement-expression macros so
 // the immediate reaches the asm directly (works without -O)
-#define __PS2_MMI_SHIFT(asm_op, T, a, n)                                     \
-    __extension__ ({                                                         \
-        T r;                                                                 \
-        __asm__(asm_op " %0,%1,%2" : "=r"(r) : "r"(a), "i"(n));              \
-        r;                                                                   \
+#define __PS2_MMI_SHIFT(asm_op, T, a, n) \
+    __extension__({                      \
+        T r;                             \
+        __asm__(asm_op " %0,%1,%2"       \
+                : "=r"(r)                \
+                : "r"(a), "i"(n));       \
+        r;                               \
     })
 #define __mmi_psllh_u(a, n) __PS2_MMI_SHIFT("psllh", uint32x4_t, a, n)
 #define __mmi_psllw_u(a, n) __PS2_MMI_SHIFT("psllw", uint32x4_t, a, n)
@@ -363,25 +417,29 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pnor(uint32x4_
 #define __mmi_psrah_s(a, n) __PS2_MMI_SHIFT("psrah", int32x4_t, a, n)
 #define __mmi_psraw_s(a, n) __PS2_MMI_SHIFT("psraw", int32x4_t, a, n)
 
-
-
 // variable quadword shifts (shift amount taken from bits[5:0] of the register)
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_psllvw(uint32x4_t a, uint32x4_t b)
 {
     uint32x4_t r;
-    __asm__("psllvw %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));
+    __asm__("psllvw %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b));
     return r;
 }
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_psrlvw(uint32x4_t a, uint32x4_t b)
 {
     uint32x4_t r;
-    __asm__("psrlvw %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));
+    __asm__("psrlvw %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b));
     return r;
 }
 static inline __attribute__((__always_inline__)) int32x4_t __mmi_psravw(int32x4_t a, int32x4_t b)
 {
     int32x4_t r;
-    __asm__("psravw %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));
+    __asm__("psravw %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b));
     return r;
 }
 
@@ -390,7 +448,9 @@ static inline __attribute__((__always_inline__)) int32x4_t __mmi_psravw(int32x4_
 static inline __attribute__((__always_inline__)) int32x4_t __mmi_pabsh(int16x8_t a)
 {
     int32x4_t r;
-    __asm__("pabsh %0,%1" : "=r"(r) : "r"(a));
+    __asm__("pabsh %0,%1"
+            : "=r"(r)
+            : "r"(a));
     return r;
 }
 
@@ -398,7 +458,9 @@ static inline __attribute__((__always_inline__)) int32x4_t __mmi_pabsh(int16x8_t
 static inline __attribute__((__always_inline__)) int32x4_t __mmi_pabsw(int32x4_t a)
 {
     int32x4_t r;
-    __asm__("pabsw %0,%1" : "=r"(r) : "r"(a));
+    __asm__("pabsw %0,%1"
+            : "=r"(r)
+            : "r"(a));
     return r;
 }
 
@@ -406,13 +468,17 @@ static inline __attribute__((__always_inline__)) int32x4_t __mmi_pabsw(int32x4_t
 static inline __attribute__((__always_inline__)) int32x4_t __mmi_pmaxh(int16x8_t a, int16x8_t b)
 {
     int32x4_t r;
-    __asm__("pmaxh %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));
+    __asm__("pmaxh %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b));
     return r;
 }
 static inline __attribute__((__always_inline__)) int32x4_t __mmi_pminh(int16x8_t a, int16x8_t b)
 {
     int32x4_t r;
-    __asm__("pminh %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));
+    __asm__("pminh %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b));
     return r;
 }
 
@@ -420,13 +486,17 @@ static inline __attribute__((__always_inline__)) int32x4_t __mmi_pminh(int16x8_t
 static inline __attribute__((__always_inline__)) int32x4_t __mmi_pmaxw(int32x4_t a, int32x4_t b)
 {
     int32x4_t r;
-    __asm__("pmaxw %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));
+    __asm__("pmaxw %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b));
     return r;
 }
 static inline __attribute__((__always_inline__)) int32x4_t __mmi_pminw(int32x4_t a, int32x4_t b)
 {
     int32x4_t r;
-    __asm__("pminw %0,%1,%2" : "=r"(r) : "r"(a), "r"(b));
+    __asm__("pminw %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b));
     return r;
 }
 
@@ -446,7 +516,10 @@ static inline __attribute__((__always_inline__)) int32x4_t __mmi_pminw(int32x4_t
 static inline __attribute__((__always_inline__)) int32x4_t __mmi_phmadh(int16x8_t a, int16x8_t b)
 {
     int32x4_t r;
-    __asm__("phmadh %0,%1,%2" : "=r"(r) : "r"(a), "r"(b) : "$hi", "$lo");
+    __asm__("phmadh %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b)
+            : "$hi", "$lo");
     return r;
 }
 
@@ -455,7 +528,10 @@ static inline __attribute__((__always_inline__)) int32x4_t __mmi_phmadh(int16x8_
 static inline __attribute__((__always_inline__)) int32x4_t __mmi_phmsbh(int16x8_t a, int16x8_t b)
 {
     int32x4_t r;
-    __asm__("phmsbh %0,%1,%2" : "=r"(r) : "r"(a), "r"(b) : "$hi", "$lo");
+    __asm__("phmsbh %0,%1,%2"
+            : "=r"(r)
+            : "r"(a), "r"(b)
+            : "$hi", "$lo");
     return r;
 }
 
@@ -471,7 +547,10 @@ static inline __attribute__((__always_inline__)) int32x4_t __mmi_phmsbh(int16x8_
 static inline __attribute__((__always_inline__)) int32x4_t __mmi_pmsubh(int32x4_t acc, int16x8_t a, int16x8_t b)
 {
     int32x4_t r;
-    __asm__("pmthi %3\n\tpmtlo %3\n\tpmsubh %0,%1,%2" : "=&r"(r) : "r"(a), "r"(b), "r"(acc) : "$hi", "$lo");
+    __asm__("pmthi %3\n\tpmtlo %3\n\tpmsubh %0,%1,%2"
+            : "=&r"(r)
+            : "r"(a), "r"(b), "r"(acc)
+            : "$hi", "$lo");
     return r;
 }
 
@@ -485,7 +564,10 @@ static inline __attribute__((__always_inline__)) int32x4_t __mmi_pmsubh(int32x4_
 static inline __attribute__((__always_inline__)) int32x4_t __mmi_pmsubw(int32x4_t acc, int32x4_t a, int32x4_t b)
 {
     int32x4_t r;
-    __asm__("pmthi %3\n\tpmtlo %3\n\tpmsubw %0,%1,%2" : "=&r"(r) : "r"(a), "r"(b), "r"(acc) : "$hi", "$lo");
+    __asm__("pmthi %3\n\tpmtlo %3\n\tpmsubw %0,%1,%2"
+            : "=&r"(r)
+            : "r"(a), "r"(b), "r"(acc)
+            : "$hi", "$lo");
     return r;
 }
 
@@ -494,7 +576,9 @@ static inline __attribute__((__always_inline__)) int32x4_t __mmi_pmsubw(int32x4_
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_ppacb(uint32x4_t rs, uint32x4_t rt)
 {
     uint32x4_t r;
-    __asm__("ppacb %0,%1,%2" : "=r"(r) : "r"(rs), "r"(rt));
+    __asm__("ppacb %0,%1,%2"
+            : "=r"(r)
+            : "r"(rs), "r"(rt));
     return r;
 }
 
@@ -503,7 +587,9 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_ppacb(uint32x4
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_ppach(uint32x4_t rs, uint32x4_t rt)
 {
     uint32x4_t r;
-    __asm__("ppach %0,%1,%2" : "=r"(r) : "r"(rs), "r"(rt));
+    __asm__("ppach %0,%1,%2"
+            : "=r"(r)
+            : "r"(rs), "r"(rt));
     return r;
 }
 
@@ -511,7 +597,9 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_ppach(uint32x4
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_ppacw(uint32x4_t rs, uint32x4_t rt)
 {
     uint32x4_t r;
-    __asm__("ppacw %0,%1,%2" : "=r"(r) : "r"(rs), "r"(rt));
+    __asm__("ppacw %0,%1,%2"
+            : "=r"(r)
+            : "r"(rs), "r"(rt));
     return r;
 }
 
@@ -521,7 +609,9 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_ppacw(uint32x4
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_ppac5(uint32x4_t rt)
 {
     uint32x4_t r;
-    __asm__("ppac5 %0,%1" : "=r"(r) : "r"(rt));
+    __asm__("ppac5 %0,%1"
+            : "=r"(r)
+            : "r"(rt));
     return r;
 }
 
@@ -531,7 +621,9 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_ppac5(uint32x4
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pext5(uint32x4_t rt)
 {
     uint32x4_t r;
-    __asm__("pext5 %0,%1" : "=r"(r) : "r"(rt));
+    __asm__("pext5 %0,%1"
+            : "=r"(r)
+            : "r"(rt));
     return r;
 }
 
@@ -540,14 +632,20 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pext5(uint32x4
 // back with __mmi_pmflo/__mmi_pmfhi.  Dividing by zero raises nothing.
 static inline __attribute__((__always_inline__)) void __mmi_pdivw(int32x4_t rs, int32x4_t rt)
 {
-    __asm__("pdivw %0,%1" : : "r"(rs), "r"(rt) : "$hi", "$lo");
+    __asm__("pdivw %0,%1"
+            :
+            : "r"(rs), "r"(rt)
+            : "$hi", "$lo");
 }
 
 // PDIVUW: unsigned divide of words 0 and 2.  The quotient and the remainder
 // are sign-extended into LO and HI even though the division is unsigned.
 static inline __attribute__((__always_inline__)) void __mmi_pdivuw(uint32x4_t rs, uint32x4_t rt)
 {
-    __asm__("pdivuw %0,%1" : : "r"(rs), "r"(rt) : "$hi", "$lo");
+    __asm__("pdivuw %0,%1"
+            :
+            : "r"(rs), "r"(rt)
+            : "$hi", "$lo");
 }
 
 // PDIVBW: divide each of the four signed words of rs by the one signed
@@ -556,7 +654,10 @@ static inline __attribute__((__always_inline__)) void __mmi_pdivuw(uint32x4_t rs
 // quotient 0x80000000 and remainder 0.
 static inline __attribute__((__always_inline__)) void __mmi_pdivbw(int32x4_t rs, int32x4_t rt)
 {
-    __asm__("pdivbw %0,%1" : : "r"(rs), "r"(rt) : "$hi", "$lo");
+    __asm__("pdivbw %0,%1"
+            :
+            : "r"(rs), "r"(rt)
+            : "$hi", "$lo");
 }
 
 // PLZCW: count of leading bits equal to the top bit, minus one.  Only the
@@ -565,7 +666,9 @@ static inline __attribute__((__always_inline__)) void __mmi_pdivbw(int32x4_t rs,
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_plzcw(uint32x4_t rs)
 {
     uint32x4_t r;
-    __asm__("plzcw %0,%1" : "=r"(r) : "r"(rs));
+    __asm__("plzcw %0,%1"
+            : "=r"(r)
+            : "r"(rs));
     return r;
 }
 
@@ -573,7 +676,9 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_plzcw(uint32x4
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pexeh(uint32x4_t rt)
 {
     uint32x4_t r;
-    __asm__("pexeh %0,%1" : "=r"(r) : "r"(rt));
+    __asm__("pexeh %0,%1"
+            : "=r"(r)
+            : "r"(rt));
     return r;
 }
 
@@ -581,7 +686,9 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pexeh(uint32x4
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pexch(uint32x4_t rt)
 {
     uint32x4_t r;
-    __asm__("pexch %0,%1" : "=r"(r) : "r"(rt));
+    __asm__("pexch %0,%1"
+            : "=r"(r)
+            : "r"(rt));
     return r;
 }
 
@@ -589,7 +696,9 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pexch(uint32x4
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pexew(uint32x4_t rt)
 {
     uint32x4_t r;
-    __asm__("pexew %0,%1" : "=r"(r) : "r"(rt));
+    __asm__("pexew %0,%1"
+            : "=r"(r)
+            : "r"(rt));
     return r;
 }
 
@@ -597,7 +706,9 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pexew(uint32x4
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pexcw(uint32x4_t rt)
 {
     uint32x4_t r;
-    __asm__("pexcw %0,%1" : "=r"(r) : "r"(rt));
+    __asm__("pexcw %0,%1"
+            : "=r"(r)
+            : "r"(rt));
     return r;
 }
 
@@ -606,7 +717,9 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pexcw(uint32x4
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pinteh(uint32x4_t rs, uint32x4_t rt)
 {
     uint32x4_t r;
-    __asm__("pinteh %0,%1,%2" : "=r"(r) : "r"(rs), "r"(rt));
+    __asm__("pinteh %0,%1,%2"
+            : "=r"(r)
+            : "r"(rs), "r"(rt));
     return r;
 }
 
@@ -615,7 +728,9 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pinteh(uint32x
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pcpyh(uint32x4_t rt)
 {
     uint32x4_t r;
-    __asm__("pcpyh %0,%1" : "=r"(r) : "r"(rt));
+    __asm__("pcpyh %0,%1"
+            : "=r"(r)
+            : "r"(rt));
     return r;
 }
 
@@ -625,7 +740,9 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pcpyh(uint32x4
 static inline __attribute__((__always_inline__)) int16x8_t __mmi_padsbh(int16x8_t rs, int16x8_t rt)
 {
     int16x8_t r;
-    __asm__("padsbh %0,%1,%2" : "=r"(r) : "r"(rs), "r"(rt));
+    __asm__("padsbh %0,%1,%2"
+            : "=r"(r)
+            : "r"(rs), "r"(rt));
     return r;
 }
 
@@ -634,7 +751,10 @@ static inline __attribute__((__always_inline__)) int16x8_t __mmi_padsbh(int16x8_
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmfhl_lh()
 {
     uint32x4_t r;
-    __asm__ __volatile__("pmfhl.lh %0" : "=&r"(r) : : "$hi", "$lo");
+    __asm__ __volatile__("pmfhl.lh %0"
+                         : "=&r"(r)
+                         :
+                         : "$hi", "$lo");
     return r;
 }
 
@@ -642,7 +762,10 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmfhl_lh()
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmfhl_lw()
 {
     uint32x4_t r;
-    __asm__ __volatile__("pmfhl.lw %0" : "=&r"(r) : : "$hi", "$lo");
+    __asm__ __volatile__("pmfhl.lw %0"
+                         : "=&r"(r)
+                         :
+                         : "$hi", "$lo");
     return r;
 }
 
@@ -653,7 +776,10 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmfhl_lw()
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmfhl_sh()
 {
     uint32x4_t r;
-    __asm__ __volatile__("pmfhl.sh %0" : "=&r"(r) : : "$hi", "$lo");
+    __asm__ __volatile__("pmfhl.sh %0"
+                         : "=&r"(r)
+                         :
+                         : "$hi", "$lo");
     return r;
 }
 
@@ -663,7 +789,10 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmfhl_sh()
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmfhl_slw()
 {
     uint32x4_t r;
-    __asm__ __volatile__("pmfhl.slw %0" : "=&r"(r) : : "$hi", "$lo");
+    __asm__ __volatile__("pmfhl.slw %0"
+                         : "=&r"(r)
+                         :
+                         : "$hi", "$lo");
     return r;
 }
 
@@ -671,7 +800,10 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmfhl_slw()
 static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmfhl_uw()
 {
     uint32x4_t r;
-    __asm__ __volatile__("pmfhl.uw %0" : "=&r"(r) : : "$hi", "$lo");
+    __asm__ __volatile__("pmfhl.uw %0"
+                         : "=&r"(r)
+                         :
+                         : "$hi", "$lo");
     return r;
 }
 
@@ -679,17 +811,26 @@ static inline __attribute__((__always_inline__)) uint32x4_t __mmi_pmfhl_uw()
 // rs.w[3] -> HI.w[2].  The other four HI/LO words are left unchanged.
 static inline __attribute__((__always_inline__)) void __mmi_pmthl_lw(uint32x4_t rs)
 {
-    __asm__("pmthl.lw %0" : : "r"(rs) : "$hi", "$lo");
+    __asm__("pmthl.lw %0"
+            :
+            : "r"(rs)
+            : "$hi", "$lo");
 }
 
 // PMTHI / PMTLO: copy a whole 128-bit GPR into HI or LO.
 static inline __attribute__((__always_inline__)) void __mmi_pmthi(uint32x4_t rs)
 {
-    __asm__("pmthi %0" : : "r"(rs) : "$hi", "$lo");
+    __asm__("pmthi %0"
+            :
+            : "r"(rs)
+            : "$hi", "$lo");
 }
 static inline __attribute__((__always_inline__)) void __mmi_pmtlo(uint32x4_t rs)
 {
-    __asm__("pmtlo %0" : : "r"(rs) : "$hi", "$lo");
+    __asm__("pmtlo %0"
+            :
+            : "r"(rs)
+            : "$hi", "$lo");
 }
 
 // ----------------------------- misc helpers -----------------------------

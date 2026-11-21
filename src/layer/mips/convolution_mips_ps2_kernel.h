@@ -192,27 +192,74 @@ static void convolution_ps2_pack4(const Mat& bottom_packed, Mat& top_blob,
                     "addiu $11, $11, -1\n\t"
                     "bgtz $11, 1b\n\t"
                     "nop\n\t"
-                    "vaddy.x $vf4, $vf4, $vf4\n\t" "vaddz.x $vf4, $vf4, $vf4\n\t" "vaddw.x $vf4, $vf4, $vf4\n\t"
-                    "vaddy.x $vf5, $vf5, $vf5\n\t" "vaddz.x $vf5, $vf5, $vf5\n\t" "vaddw.x $vf5, $vf5, $vf5\n\t"
-                    "vaddy.x $vf6, $vf6, $vf6\n\t" "vaddz.x $vf6, $vf6, $vf6\n\t" "vaddw.x $vf6, $vf6, $vf6\n\t"
-                    "vaddy.x $vf7, $vf7, $vf7\n\t" "vaddz.x $vf7, $vf7, $vf7\n\t" "vaddw.x $vf7, $vf7, $vf7\n\t"
-                    "vaddy.x $vf8, $vf8, $vf8\n\t" "vaddz.x $vf8, $vf8, $vf8\n\t" "vaddw.x $vf8, $vf8, $vf8\n\t"
-                    "vaddy.x $vf9, $vf9, $vf9\n\t" "vaddz.x $vf9, $vf9, $vf9\n\t" "vaddw.x $vf9, $vf9, $vf9\n\t"
-                    "vaddy.x $vf10, $vf10, $vf10\n\t" "vaddz.x $vf10, $vf10, $vf10\n\t" "vaddw.x $vf10, $vf10, $vf10\n\t"
-                    "vaddy.x $vf11, $vf11, $vf11\n\t" "vaddz.x $vf11, $vf11, $vf11\n\t" "vaddw.x $vf11, $vf11, $vf11\n\t"
-                    "vaddy.x $vf18, $vf18, $vf18\n\t" "vaddz.x $vf18, $vf18, $vf18\n\t" "vaddw.x $vf18, $vf18, $vf18\n\t"
-                    "vaddy.x $vf19, $vf19, $vf19\n\t" "vaddz.x $vf19, $vf19, $vf19\n\t" "vaddw.x $vf19, $vf19, $vf19\n\t"
-                    "vaddy.x $vf20, $vf20, $vf20\n\t" "vaddz.x $vf20, $vf20, $vf20\n\t" "vaddw.x $vf20, $vf20, $vf20\n\t"
-                    "vaddy.x $vf21, $vf21, $vf21\n\t" "vaddz.x $vf21, $vf21, $vf21\n\t" "vaddw.x $vf21, $vf21, $vf21\n\t"
-                    "vaddy.x $vf22, $vf22, $vf22\n\t" "vaddz.x $vf22, $vf22, $vf22\n\t" "vaddw.x $vf22, $vf22, $vf22\n\t"
-                    "vaddy.x $vf23, $vf23, $vf23\n\t" "vaddz.x $vf23, $vf23, $vf23\n\t" "vaddw.x $vf23, $vf23, $vf23\n\t"
-                    "vaddy.x $vf24, $vf24, $vf24\n\t" "vaddz.x $vf24, $vf24, $vf24\n\t" "vaddw.x $vf24, $vf24, $vf24\n\t"
-                    "vaddy.x $vf25, $vf25, $vf25\n\t" "vaddz.x $vf25, $vf25, $vf25\n\t" "vaddw.x $vf25, $vf25, $vf25\n\t"
-                    "nop\n\t" "nop\n\t" "nop\n\t" "nop\n\t"
-                    "sqc2 $vf4, 0(%[ov])\n\t" "sqc2 $vf8, 16(%[ov])\n\t" "sqc2 $vf18, 32(%[ov])\n\t" "sqc2 $vf22, 48(%[ov])\n\t"
-                    "sqc2 $vf5, 64(%[ov])\n\t" "sqc2 $vf9, 80(%[ov])\n\t" "sqc2 $vf19, 96(%[ov])\n\t" "sqc2 $vf23, 112(%[ov])\n\t"
-                    "sqc2 $vf6, 128(%[ov])\n\t" "sqc2 $vf10, 144(%[ov])\n\t" "sqc2 $vf20, 160(%[ov])\n\t" "sqc2 $vf24, 176(%[ov])\n\t"
-                    "sqc2 $vf7, 192(%[ov])\n\t" "sqc2 $vf11, 208(%[ov])\n\t" "sqc2 $vf21, 224(%[ov])\n\t" "sqc2 $vf25, 240(%[ov])\n\t"
+                    "vaddy.x $vf4, $vf4, $vf4\n\t"
+                    "vaddz.x $vf4, $vf4, $vf4\n\t"
+                    "vaddw.x $vf4, $vf4, $vf4\n\t"
+                    "vaddy.x $vf5, $vf5, $vf5\n\t"
+                    "vaddz.x $vf5, $vf5, $vf5\n\t"
+                    "vaddw.x $vf5, $vf5, $vf5\n\t"
+                    "vaddy.x $vf6, $vf6, $vf6\n\t"
+                    "vaddz.x $vf6, $vf6, $vf6\n\t"
+                    "vaddw.x $vf6, $vf6, $vf6\n\t"
+                    "vaddy.x $vf7, $vf7, $vf7\n\t"
+                    "vaddz.x $vf7, $vf7, $vf7\n\t"
+                    "vaddw.x $vf7, $vf7, $vf7\n\t"
+                    "vaddy.x $vf8, $vf8, $vf8\n\t"
+                    "vaddz.x $vf8, $vf8, $vf8\n\t"
+                    "vaddw.x $vf8, $vf8, $vf8\n\t"
+                    "vaddy.x $vf9, $vf9, $vf9\n\t"
+                    "vaddz.x $vf9, $vf9, $vf9\n\t"
+                    "vaddw.x $vf9, $vf9, $vf9\n\t"
+                    "vaddy.x $vf10, $vf10, $vf10\n\t"
+                    "vaddz.x $vf10, $vf10, $vf10\n\t"
+                    "vaddw.x $vf10, $vf10, $vf10\n\t"
+                    "vaddy.x $vf11, $vf11, $vf11\n\t"
+                    "vaddz.x $vf11, $vf11, $vf11\n\t"
+                    "vaddw.x $vf11, $vf11, $vf11\n\t"
+                    "vaddy.x $vf18, $vf18, $vf18\n\t"
+                    "vaddz.x $vf18, $vf18, $vf18\n\t"
+                    "vaddw.x $vf18, $vf18, $vf18\n\t"
+                    "vaddy.x $vf19, $vf19, $vf19\n\t"
+                    "vaddz.x $vf19, $vf19, $vf19\n\t"
+                    "vaddw.x $vf19, $vf19, $vf19\n\t"
+                    "vaddy.x $vf20, $vf20, $vf20\n\t"
+                    "vaddz.x $vf20, $vf20, $vf20\n\t"
+                    "vaddw.x $vf20, $vf20, $vf20\n\t"
+                    "vaddy.x $vf21, $vf21, $vf21\n\t"
+                    "vaddz.x $vf21, $vf21, $vf21\n\t"
+                    "vaddw.x $vf21, $vf21, $vf21\n\t"
+                    "vaddy.x $vf22, $vf22, $vf22\n\t"
+                    "vaddz.x $vf22, $vf22, $vf22\n\t"
+                    "vaddw.x $vf22, $vf22, $vf22\n\t"
+                    "vaddy.x $vf23, $vf23, $vf23\n\t"
+                    "vaddz.x $vf23, $vf23, $vf23\n\t"
+                    "vaddw.x $vf23, $vf23, $vf23\n\t"
+                    "vaddy.x $vf24, $vf24, $vf24\n\t"
+                    "vaddz.x $vf24, $vf24, $vf24\n\t"
+                    "vaddw.x $vf24, $vf24, $vf24\n\t"
+                    "vaddy.x $vf25, $vf25, $vf25\n\t"
+                    "vaddz.x $vf25, $vf25, $vf25\n\t"
+                    "vaddw.x $vf25, $vf25, $vf25\n\t"
+                    "nop\n\t"
+                    "nop\n\t"
+                    "nop\n\t"
+                    "nop\n\t"
+                    "sqc2 $vf4, 0(%[ov])\n\t"
+                    "sqc2 $vf8, 16(%[ov])\n\t"
+                    "sqc2 $vf18, 32(%[ov])\n\t"
+                    "sqc2 $vf22, 48(%[ov])\n\t"
+                    "sqc2 $vf5, 64(%[ov])\n\t"
+                    "sqc2 $vf9, 80(%[ov])\n\t"
+                    "sqc2 $vf19, 96(%[ov])\n\t"
+                    "sqc2 $vf23, 112(%[ov])\n\t"
+                    "sqc2 $vf6, 128(%[ov])\n\t"
+                    "sqc2 $vf10, 144(%[ov])\n\t"
+                    "sqc2 $vf20, 160(%[ov])\n\t"
+                    "sqc2 $vf24, 176(%[ov])\n\t"
+                    "sqc2 $vf7, 192(%[ov])\n\t"
+                    "sqc2 $vf11, 208(%[ov])\n\t"
+                    "sqc2 $vf21, 224(%[ov])\n\t"
+                    "sqc2 $vf25, 240(%[ov])\n\t"
                     :
                     : [xb] "r"(xb), [xs] "r"(xstride), [xs3] "r"(3 * xstride), [sofs] "r"(space_ofs_bytes), [wb] "r"(wb), [kmax] "r"(maxk), [nq] "r"(inch4 >> 2), [wstep] "r"(wch * 4), [kstep] "r"(inch4 * 4), [ov] "r"(accv)
                     : "$2", "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$16", "$17", "memory");
@@ -257,31 +304,50 @@ static void convolution_ps2_pack4(const Mat& bottom_packed, Mat& top_blob,
                     "lqc2 $vf15, 0($16)\n\t"
                     "lqc2 $vf16, 0($17)\n\t"
                     "lqc2 $vf1, 0($12)\n\t"
-                    "vmul.xyzw $vf17, $vf13, $vf1\n\t" "vadd.xyzw $vf4, $vf4, $vf17\n\t"
-                    "vmul.xyzw $vf17, $vf14, $vf1\n\t" "vadd.xyzw $vf8, $vf8, $vf17\n\t"
-                    "vmul.xyzw $vf17, $vf15, $vf1\n\t" "vadd.xyzw $vf18, $vf18, $vf17\n\t"
-                    "vmul.xyzw $vf17, $vf16, $vf1\n\t" "vadd.xyzw $vf22, $vf22, $vf17\n\t"
+                    "vmul.xyzw $vf17, $vf13, $vf1\n\t"
+                    "vadd.xyzw $vf4, $vf4, $vf17\n\t"
+                    "vmul.xyzw $vf17, $vf14, $vf1\n\t"
+                    "vadd.xyzw $vf8, $vf8, $vf17\n\t"
+                    "vmul.xyzw $vf17, $vf15, $vf1\n\t"
+                    "vadd.xyzw $vf18, $vf18, $vf17\n\t"
+                    "vmul.xyzw $vf17, $vf16, $vf1\n\t"
+                    "vadd.xyzw $vf22, $vf22, $vf17\n\t"
                     "addu $12, $12, %[xs]\n\t"
                     "lqc2 $vf1, 0($12)\n\t"
-                    "vmul.xyzw $vf17, $vf13, $vf1\n\t" "vadd.xyzw $vf5, $vf5, $vf17\n\t"
-                    "vmul.xyzw $vf17, $vf14, $vf1\n\t" "vadd.xyzw $vf9, $vf9, $vf17\n\t"
-                    "vmul.xyzw $vf17, $vf15, $vf1\n\t" "vadd.xyzw $vf19, $vf19, $vf17\n\t"
-                    "vmul.xyzw $vf17, $vf16, $vf1\n\t" "vadd.xyzw $vf23, $vf23, $vf17\n\t"
+                    "vmul.xyzw $vf17, $vf13, $vf1\n\t"
+                    "vadd.xyzw $vf5, $vf5, $vf17\n\t"
+                    "vmul.xyzw $vf17, $vf14, $vf1\n\t"
+                    "vadd.xyzw $vf9, $vf9, $vf17\n\t"
+                    "vmul.xyzw $vf17, $vf15, $vf1\n\t"
+                    "vadd.xyzw $vf19, $vf19, $vf17\n\t"
+                    "vmul.xyzw $vf17, $vf16, $vf1\n\t"
+                    "vadd.xyzw $vf23, $vf23, $vf17\n\t"
                     "addu $12, $12, %[xs]\n\t"
                     "lqc2 $vf1, 0($12)\n\t"
-                    "vmul.xyzw $vf17, $vf13, $vf1\n\t" "vadd.xyzw $vf6, $vf6, $vf17\n\t"
-                    "vmul.xyzw $vf17, $vf14, $vf1\n\t" "vadd.xyzw $vf10, $vf10, $vf17\n\t"
-                    "vmul.xyzw $vf17, $vf15, $vf1\n\t" "vadd.xyzw $vf20, $vf20, $vf17\n\t"
-                    "vmul.xyzw $vf17, $vf16, $vf1\n\t" "vadd.xyzw $vf24, $vf24, $vf17\n\t"
+                    "vmul.xyzw $vf17, $vf13, $vf1\n\t"
+                    "vadd.xyzw $vf6, $vf6, $vf17\n\t"
+                    "vmul.xyzw $vf17, $vf14, $vf1\n\t"
+                    "vadd.xyzw $vf10, $vf10, $vf17\n\t"
+                    "vmul.xyzw $vf17, $vf15, $vf1\n\t"
+                    "vadd.xyzw $vf20, $vf20, $vf17\n\t"
+                    "vmul.xyzw $vf17, $vf16, $vf1\n\t"
+                    "vadd.xyzw $vf24, $vf24, $vf17\n\t"
                     "addu $12, $12, %[xs]\n\t"
                     "lqc2 $vf1, 0($12)\n\t"
-                    "vmul.xyzw $vf17, $vf13, $vf1\n\t" "vadd.xyzw $vf7, $vf7, $vf17\n\t"
-                    "vmul.xyzw $vf17, $vf14, $vf1\n\t" "vadd.xyzw $vf11, $vf11, $vf17\n\t"
-                    "vmul.xyzw $vf17, $vf15, $vf1\n\t" "vadd.xyzw $vf21, $vf21, $vf17\n\t"
-                    "vmul.xyzw $vf17, $vf16, $vf1\n\t" "vadd.xyzw $vf25, $vf25, $vf17\n\t"
+                    "vmul.xyzw $vf17, $vf13, $vf1\n\t"
+                    "vadd.xyzw $vf7, $vf7, $vf17\n\t"
+                    "vmul.xyzw $vf17, $vf14, $vf1\n\t"
+                    "vadd.xyzw $vf11, $vf11, $vf17\n\t"
+                    "vmul.xyzw $vf17, $vf15, $vf1\n\t"
+                    "vadd.xyzw $vf21, $vf21, $vf17\n\t"
+                    "vmul.xyzw $vf17, $vf16, $vf1\n\t"
+                    "vadd.xyzw $vf25, $vf25, $vf17\n\t"
                     "subu $12, $12, %[xs3]\n\t"
                     "addiu $12, $12, 16\n\t"
-                    "addiu $14, $14, 16\n\t" "addiu $15, $15, 16\n\t" "addiu $16, $16, 16\n\t" "addiu $17, $17, 16\n\t"
+                    "addiu $14, $14, 16\n\t"
+                    "addiu $15, $15, 16\n\t"
+                    "addiu $16, $16, 16\n\t"
+                    "addiu $17, $17, 16\n\t"
                     "addiu $13, $13, -1\n\t"
                     "bgtz $13, 2b\n\t"
                     "nop\n\t"
@@ -289,27 +355,74 @@ static void convolution_ps2_pack4(const Mat& bottom_packed, Mat& top_blob,
                     "addiu $11, $11, -1\n\t"
                     "bgtz $11, 1b\n\t"
                     "nop\n\t"
-                    "vaddy.x $vf4, $vf4, $vf4\n\t" "vaddz.x $vf4, $vf4, $vf4\n\t" "vaddw.x $vf4, $vf4, $vf4\n\t"
-                    "vaddy.x $vf5, $vf5, $vf5\n\t" "vaddz.x $vf5, $vf5, $vf5\n\t" "vaddw.x $vf5, $vf5, $vf5\n\t"
-                    "vaddy.x $vf6, $vf6, $vf6\n\t" "vaddz.x $vf6, $vf6, $vf6\n\t" "vaddw.x $vf6, $vf6, $vf6\n\t"
-                    "vaddy.x $vf7, $vf7, $vf7\n\t" "vaddz.x $vf7, $vf7, $vf7\n\t" "vaddw.x $vf7, $vf7, $vf7\n\t"
-                    "vaddy.x $vf8, $vf8, $vf8\n\t" "vaddz.x $vf8, $vf8, $vf8\n\t" "vaddw.x $vf8, $vf8, $vf8\n\t"
-                    "vaddy.x $vf9, $vf9, $vf9\n\t" "vaddz.x $vf9, $vf9, $vf9\n\t" "vaddw.x $vf9, $vf9, $vf9\n\t"
-                    "vaddy.x $vf10, $vf10, $vf10\n\t" "vaddz.x $vf10, $vf10, $vf10\n\t" "vaddw.x $vf10, $vf10, $vf10\n\t"
-                    "vaddy.x $vf11, $vf11, $vf11\n\t" "vaddz.x $vf11, $vf11, $vf11\n\t" "vaddw.x $vf11, $vf11, $vf11\n\t"
-                    "vaddy.x $vf18, $vf18, $vf18\n\t" "vaddz.x $vf18, $vf18, $vf18\n\t" "vaddw.x $vf18, $vf18, $vf18\n\t"
-                    "vaddy.x $vf19, $vf19, $vf19\n\t" "vaddz.x $vf19, $vf19, $vf19\n\t" "vaddw.x $vf19, $vf19, $vf19\n\t"
-                    "vaddy.x $vf20, $vf20, $vf20\n\t" "vaddz.x $vf20, $vf20, $vf20\n\t" "vaddw.x $vf20, $vf20, $vf20\n\t"
-                    "vaddy.x $vf21, $vf21, $vf21\n\t" "vaddz.x $vf21, $vf21, $vf21\n\t" "vaddw.x $vf21, $vf21, $vf21\n\t"
-                    "vaddy.x $vf22, $vf22, $vf22\n\t" "vaddz.x $vf22, $vf22, $vf22\n\t" "vaddw.x $vf22, $vf22, $vf22\n\t"
-                    "vaddy.x $vf23, $vf23, $vf23\n\t" "vaddz.x $vf23, $vf23, $vf23\n\t" "vaddw.x $vf23, $vf23, $vf23\n\t"
-                    "vaddy.x $vf24, $vf24, $vf24\n\t" "vaddz.x $vf24, $vf24, $vf24\n\t" "vaddw.x $vf24, $vf24, $vf24\n\t"
-                    "vaddy.x $vf25, $vf25, $vf25\n\t" "vaddz.x $vf25, $vf25, $vf25\n\t" "vaddw.x $vf25, $vf25, $vf25\n\t"
-                    "nop\n\t" "nop\n\t" "nop\n\t" "nop\n\t"
-                    "sqc2 $vf4, 256(%[ov])\n\t" "sqc2 $vf8, 272(%[ov])\n\t" "sqc2 $vf18, 288(%[ov])\n\t" "sqc2 $vf22, 304(%[ov])\n\t"
-                    "sqc2 $vf5, 320(%[ov])\n\t" "sqc2 $vf9, 336(%[ov])\n\t" "sqc2 $vf19, 352(%[ov])\n\t" "sqc2 $vf23, 368(%[ov])\n\t"
-                    "sqc2 $vf6, 384(%[ov])\n\t" "sqc2 $vf10, 400(%[ov])\n\t" "sqc2 $vf20, 416(%[ov])\n\t" "sqc2 $vf24, 432(%[ov])\n\t"
-                    "sqc2 $vf7, 448(%[ov])\n\t" "sqc2 $vf11, 464(%[ov])\n\t" "sqc2 $vf21, 480(%[ov])\n\t" "sqc2 $vf25, 496(%[ov])\n\t"
+                    "vaddy.x $vf4, $vf4, $vf4\n\t"
+                    "vaddz.x $vf4, $vf4, $vf4\n\t"
+                    "vaddw.x $vf4, $vf4, $vf4\n\t"
+                    "vaddy.x $vf5, $vf5, $vf5\n\t"
+                    "vaddz.x $vf5, $vf5, $vf5\n\t"
+                    "vaddw.x $vf5, $vf5, $vf5\n\t"
+                    "vaddy.x $vf6, $vf6, $vf6\n\t"
+                    "vaddz.x $vf6, $vf6, $vf6\n\t"
+                    "vaddw.x $vf6, $vf6, $vf6\n\t"
+                    "vaddy.x $vf7, $vf7, $vf7\n\t"
+                    "vaddz.x $vf7, $vf7, $vf7\n\t"
+                    "vaddw.x $vf7, $vf7, $vf7\n\t"
+                    "vaddy.x $vf8, $vf8, $vf8\n\t"
+                    "vaddz.x $vf8, $vf8, $vf8\n\t"
+                    "vaddw.x $vf8, $vf8, $vf8\n\t"
+                    "vaddy.x $vf9, $vf9, $vf9\n\t"
+                    "vaddz.x $vf9, $vf9, $vf9\n\t"
+                    "vaddw.x $vf9, $vf9, $vf9\n\t"
+                    "vaddy.x $vf10, $vf10, $vf10\n\t"
+                    "vaddz.x $vf10, $vf10, $vf10\n\t"
+                    "vaddw.x $vf10, $vf10, $vf10\n\t"
+                    "vaddy.x $vf11, $vf11, $vf11\n\t"
+                    "vaddz.x $vf11, $vf11, $vf11\n\t"
+                    "vaddw.x $vf11, $vf11, $vf11\n\t"
+                    "vaddy.x $vf18, $vf18, $vf18\n\t"
+                    "vaddz.x $vf18, $vf18, $vf18\n\t"
+                    "vaddw.x $vf18, $vf18, $vf18\n\t"
+                    "vaddy.x $vf19, $vf19, $vf19\n\t"
+                    "vaddz.x $vf19, $vf19, $vf19\n\t"
+                    "vaddw.x $vf19, $vf19, $vf19\n\t"
+                    "vaddy.x $vf20, $vf20, $vf20\n\t"
+                    "vaddz.x $vf20, $vf20, $vf20\n\t"
+                    "vaddw.x $vf20, $vf20, $vf20\n\t"
+                    "vaddy.x $vf21, $vf21, $vf21\n\t"
+                    "vaddz.x $vf21, $vf21, $vf21\n\t"
+                    "vaddw.x $vf21, $vf21, $vf21\n\t"
+                    "vaddy.x $vf22, $vf22, $vf22\n\t"
+                    "vaddz.x $vf22, $vf22, $vf22\n\t"
+                    "vaddw.x $vf22, $vf22, $vf22\n\t"
+                    "vaddy.x $vf23, $vf23, $vf23\n\t"
+                    "vaddz.x $vf23, $vf23, $vf23\n\t"
+                    "vaddw.x $vf23, $vf23, $vf23\n\t"
+                    "vaddy.x $vf24, $vf24, $vf24\n\t"
+                    "vaddz.x $vf24, $vf24, $vf24\n\t"
+                    "vaddw.x $vf24, $vf24, $vf24\n\t"
+                    "vaddy.x $vf25, $vf25, $vf25\n\t"
+                    "vaddz.x $vf25, $vf25, $vf25\n\t"
+                    "vaddw.x $vf25, $vf25, $vf25\n\t"
+                    "nop\n\t"
+                    "nop\n\t"
+                    "nop\n\t"
+                    "nop\n\t"
+                    "sqc2 $vf4, 256(%[ov])\n\t"
+                    "sqc2 $vf8, 272(%[ov])\n\t"
+                    "sqc2 $vf18, 288(%[ov])\n\t"
+                    "sqc2 $vf22, 304(%[ov])\n\t"
+                    "sqc2 $vf5, 320(%[ov])\n\t"
+                    "sqc2 $vf9, 336(%[ov])\n\t"
+                    "sqc2 $vf19, 352(%[ov])\n\t"
+                    "sqc2 $vf23, 368(%[ov])\n\t"
+                    "sqc2 $vf6, 384(%[ov])\n\t"
+                    "sqc2 $vf10, 400(%[ov])\n\t"
+                    "sqc2 $vf20, 416(%[ov])\n\t"
+                    "sqc2 $vf24, 432(%[ov])\n\t"
+                    "sqc2 $vf7, 448(%[ov])\n\t"
+                    "sqc2 $vf11, 464(%[ov])\n\t"
+                    "sqc2 $vf21, 480(%[ov])\n\t"
+                    "sqc2 $vf25, 496(%[ov])\n\t"
                     :
                     : [xb] "r"(xb2), [xs] "r"(xstride), [xs3] "r"(3 * xstride), [sofs] "r"(space_ofs_bytes), [wb] "r"(wb), [kmax] "r"(maxk), [nq] "r"(inch4 >> 2), [wstep] "r"(wch * 4), [kstep] "r"(inch4 * 4), [ov] "r"(accv)
                     : "$2", "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$16", "$17", "memory");
@@ -573,7 +686,6 @@ static void convolution_ps2_pack4(const Mat& bottom_packed, Mat& top_blob,
     }
 }
 
-
 // ---------------------------------------------------------------------------
 // Weight-stationary COP2 kernel (stride_w == 1, any dilation / stride_h).
 //
@@ -619,22 +731,34 @@ static void convolution_ps2_pack4(const Mat& bottom_packed, Mat& top_blob,
 
 // MULbc broadcasts the bc field of its third operand (ft), so the weight
 // quadword goes last: fd = input * weight[bc].
-#define WST_MAC4(X, T, A0, A1, A2, A3)                                                        \
-    "vmulx.xyzw " T ", " X ", $vf22\n\t" "vadd.xyzw " A0 ", " A0 ", " T "\n\t"                \
-    "vmuly.xyzw " T ", " X ", $vf22\n\t" "vadd.xyzw " A1 ", " A1 ", " T "\n\t"                \
-    "vmulz.xyzw " T ", " X ", $vf22\n\t" "vadd.xyzw " A2 ", " A2 ", " T "\n\t"                \
-    "vmulw.xyzw " T ", " X ", $vf22\n\t" "vadd.xyzw " A3 ", " A3 ", " T "\n\t"
+#define WST_MAC4(X, T, A0, A1, A2, A3)    \
+    "vmulx.xyzw " T ", " X ", $vf22\n\t"  \
+    "vadd.xyzw " A0 ", " A0 ", " T "\n\t" \
+    "vmuly.xyzw " T ", " X ", $vf22\n\t"  \
+    "vadd.xyzw " A1 ", " A1 ", " T "\n\t" \
+    "vmulz.xyzw " T ", " X ", $vf22\n\t"  \
+    "vadd.xyzw " A2 ", " A2 ", " T "\n\t" \
+    "vmulw.xyzw " T ", " X ", $vf22\n\t"  \
+    "vadd.xyzw " A3 ", " A3 ", " T "\n\t"
 
 #define WST_MAC4A(X) WST_MAC4(X, "$vf21", "$vf4", "$vf5", "$vf6", "$vf7")
 #define WST_MAC4B(X) WST_MAC4(X, "$vf21", "$vf8", "$vf9", "$vf10", "$vf11")
 
-#define WST_HEAD "beq $11, $0, 2f\n\t" "1:\n\t"
-#define WST_TAIL "addu $8, $8, $14\n\t" "addu $10, $10, $13\n\t" "addiu $11, $11, -1\n\t" "bne $11, $0, 1b\n\t" "2:\n\t"
+#define WST_HEAD "beq $11, $0, 2f\n\t" \
+                 "1:\n\t"
+#define WST_TAIL "addu $8, $8, $14\n\t"   \
+                 "addu $10, $10, $13\n\t" \
+                 "addiu $11, $11, -1\n\t" \
+                 "bne $11, $0, 1b\n\t"    \
+                 "2:\n\t"
 
 // rotation chains: L^m(P) lands in $vf14/15/16, L^m(Q) in $vf17/18/19
-#define WST_CHAIN1 "vmr32 $vf14, $vf12\n\t" "vmr32 $vf17, $vf13\n\t"
-#define WST_CHAIN2 WST_CHAIN1 "vmr32 $vf15, $vf14\n\t" "vmr32 $vf18, $vf17\n\t"
-#define WST_CHAIN3 WST_CHAIN2 "vmr32 $vf16, $vf15\n\t" "vmr32 $vf19, $vf18\n\t"
+#define WST_CHAIN1 "vmr32 $vf14, $vf12\n\t" \
+                   "vmr32 $vf17, $vf13\n\t"
+#define WST_CHAIN2 WST_CHAIN1 "vmr32 $vf15, $vf14\n\t" \
+                              "vmr32 $vf18, $vf17\n\t"
+#define WST_CHAIN3 WST_CHAIN2 "vmr32 $vf16, $vf15\n\t" \
+                              "vmr32 $vf19, $vf18\n\t"
 // second group's Q chain reuses the freed P temp registers
 #define WST_CHAINB1 "vmr32 $vf14, $vf25\n\t"
 #define WST_CHAINB2 WST_CHAINB1 "vmr32 $vf15, $vf14\n\t"
@@ -643,42 +767,49 @@ static void convolution_ps2_pack4(const Mat& bottom_packed, Mat& top_blob,
 // X = L^m(P) on the low lanes, L^m(Q) on the high lanes (write-masked vmul
 // against the all-ones vector $vf23).  m=1: lo xyz / hi w; m=2: xy / zw;
 // m=3: x / yzw.
-#define WST_COMB_A1 "vmul.xyz $vf20, $vf14, $vf23\n\t" "vmul.w $vf20, $vf17, $vf23\n\t"
-#define WST_COMB_A2 "vmul.xy $vf20, $vf15, $vf23\n\t" "vmul.zw $vf20, $vf18, $vf23\n\t"
-#define WST_COMB_A3 "vmul.x $vf20, $vf16, $vf23\n\t" "vmul.yzw $vf20, $vf19, $vf23\n\t"
+#define WST_COMB_A1 "vmul.xyz $vf20, $vf14, $vf23\n\t" \
+                    "vmul.w $vf20, $vf17, $vf23\n\t"
+#define WST_COMB_A2 "vmul.xy $vf20, $vf15, $vf23\n\t" \
+                    "vmul.zw $vf20, $vf18, $vf23\n\t"
+#define WST_COMB_A3 "vmul.x $vf20, $vf16, $vf23\n\t" \
+                    "vmul.yzw $vf20, $vf19, $vf23\n\t"
 // second group: its P quadword is the first group's Q (stages $vf17/18/19),
 // its Q quadword was rotated into $vf14/15/16
-#define WST_COMB_B1 "vmul.xyz $vf13, $vf17, $vf23\n\t" "vmul.w $vf13, $vf14, $vf23\n\t"
-#define WST_COMB_B2 "vmul.xy $vf13, $vf18, $vf23\n\t" "vmul.zw $vf13, $vf15, $vf23\n\t"
-#define WST_COMB_B3 "vmul.x $vf13, $vf19, $vf23\n\t" "vmul.yzw $vf13, $vf16, $vf23\n\t"
+#define WST_COMB_B1 "vmul.xyz $vf13, $vf17, $vf23\n\t" \
+                    "vmul.w $vf13, $vf14, $vf23\n\t"
+#define WST_COMB_B2 "vmul.xy $vf13, $vf18, $vf23\n\t" \
+                    "vmul.zw $vf13, $vf15, $vf23\n\t"
+#define WST_COMB_B3 "vmul.x $vf13, $vf19, $vf23\n\t" \
+                    "vmul.yzw $vf13, $vf16, $vf23\n\t"
 
-#define WST_TAP_FN(NAME, G2, M)                                                                \
-    static inline void NAME(const float* xp_, const float* wp_, int nq_, int csb_, int wqb_)    \
-    {                                                                                          \
-        register const float* xp __asm__("$8") = xp_;                                          \
-        register const float* wp __asm__("$10") = wp_;                                         \
-        register int nq __asm__("$11") = nq_;                                                  \
-        register int csb __asm__("$14") = csb_;                                                \
-        register int wq __asm__("$13") = wqb_;                                                 \
-        __asm__ __volatile__(                                                                  \
-            WST_HEAD                                                                           \
-            "lqc2 $vf12, 0($8)\n\t"                                                            \
-            WST_LD_##G2##_##M                                                                  \
-            "lqc2 $vf22, 0($10)\n\t"                                                           \
-            WST_MID_##G2##_##M                                                                 \
-            WST_TAIL                                                                           \
-            : "+r"(xp), "+r"(wp), "+r"(nq)                                                     \
-            : "r"(csb), "r"(wq)                                                                \
-            : "memory");                                                                       \
+#define WST_TAP_FN(NAME, G2, M)                                                              \
+    static inline void NAME(const float* xp_, const float* wp_, int nq_, int csb_, int wqb_) \
+    {                                                                                        \
+        register const float* xp __asm__("$8") = xp_;                                        \
+        register const float* wp __asm__("$10") = wp_;                                       \
+        register int nq __asm__("$11") = nq_;                                                \
+        register int csb __asm__("$14") = csb_;                                              \
+        register int wq __asm__("$13") = wqb_;                                               \
+        __asm__ __volatile__(                                                                \
+            WST_HEAD                                                                         \
+            "lqc2 $vf12, 0($8)\n\t" WST_LD_##G2##_##M                                        \
+            "lqc2 $vf22, 0($10)\n\t" WST_MID_##G2##_##M                                      \
+                WST_TAIL                                                                     \
+            : "+r"(xp), "+r"(wp), "+r"(nq)                                                   \
+            : "r"(csb), "r"(wq)                                                              \
+            : "memory");                                                                     \
     }
 
 // x quadword loads: group A always at ($8); group B's P is A's Q (already
 // loaded) for m!=0, so only its Q at ($8)+32 needs a load; for m==0 group B's
 // P is at ($8)+16.
 #define WST_LD_G2_0 "lqc2 $vf24, 16($8)\n\t"
-#define WST_LD_G2_1 "lqc2 $vf13, 16($8)\n\t" "lqc2 $vf25, 32($8)\n\t"
-#define WST_LD_G2_2 "lqc2 $vf13, 16($8)\n\t" "lqc2 $vf25, 32($8)\n\t"
-#define WST_LD_G2_3 "lqc2 $vf13, 16($8)\n\t" "lqc2 $vf25, 32($8)\n\t"
+#define WST_LD_G2_1 "lqc2 $vf13, 16($8)\n\t" \
+                    "lqc2 $vf25, 32($8)\n\t"
+#define WST_LD_G2_2 "lqc2 $vf13, 16($8)\n\t" \
+                    "lqc2 $vf25, 32($8)\n\t"
+#define WST_LD_G2_3 "lqc2 $vf13, 16($8)\n\t" \
+                    "lqc2 $vf25, 32($8)\n\t"
 #define WST_LD_G1_0
 #define WST_LD_G1_1 "lqc2 $vf13, 16($8)\n\t"
 #define WST_LD_G1_2 "lqc2 $vf13, 16($8)\n\t"
@@ -688,7 +819,9 @@ static void convolution_ps2_pack4(const Mat& bottom_packed, Mat& top_blob,
 #define WST_MID_G1_1 WST_CHAIN1 WST_COMB_A1 WST_MAC4A("$vf20")
 #define WST_MID_G1_2 WST_CHAIN2 WST_COMB_A2 WST_MAC4A("$vf20")
 #define WST_MID_G1_3 WST_CHAIN3 WST_COMB_A3 WST_MAC4A("$vf20")
-#define WST_MID_G2_0 WST_MAC4A("$vf12") WST_MAC4B("$vf24")
+#define WST_MID_G2_0   \
+    WST_MAC4A("$vf12") \
+    WST_MAC4B("$vf24")
 #define WST_MID_G2_1 WST_CHAIN1 WST_COMB_A1 WST_MAC4A("$vf20") WST_CHAINB1 WST_COMB_B1 WST_MAC4B("$vf13")
 #define WST_MID_G2_2 WST_CHAIN2 WST_COMB_A2 WST_MAC4A("$vf20") WST_CHAINB2 WST_COMB_B2 WST_MAC4B("$vf13")
 #define WST_MID_G2_3 WST_CHAIN3 WST_COMB_A3 WST_MAC4A("$vf20") WST_CHAINB3 WST_COMB_B3 WST_MAC4B("$vf13")
@@ -820,7 +953,6 @@ static void convolution_ps2_wst(const float* bottom, int cstep,
     float scr[32] __attribute__((aligned(16)));
     float pbv[20] __attribute__((aligned(16)));
 
-
     if (outw < 4 || outh <= 0)
     {
         // tiny rows: plain scalar loops (the group machinery needs outw >= 4)
@@ -877,7 +1009,6 @@ static void convolution_ps2_wst(const float* bottom, int cstep,
         }
         const float* wbase = staged ? spr_base : weight_wst + p0;
 
-
         for (int i = 0; i < outh; i++)
         {
             const int R = i * stride_h * bw;
@@ -907,20 +1038,28 @@ static void convolution_ps2_wst(const float* bottom, int cstep,
                     switch (mk[k])
                     {
                     case 0:
-                        if (hasB) wst_tap_g2_m0(xp, wp, nq, cstepb, wstride);
-                        else wst_tap_g1_m0(xp, wp, nq, cstepb, wstride);
+                        if (hasB)
+                            wst_tap_g2_m0(xp, wp, nq, cstepb, wstride);
+                        else
+                            wst_tap_g1_m0(xp, wp, nq, cstepb, wstride);
                         break;
                     case 1:
-                        if (hasB) wst_tap_g2_m1(xp, wp, nq, cstepb, wstride);
-                        else wst_tap_g1_m1(xp, wp, nq, cstepb, wstride);
+                        if (hasB)
+                            wst_tap_g2_m1(xp, wp, nq, cstepb, wstride);
+                        else
+                            wst_tap_g1_m1(xp, wp, nq, cstepb, wstride);
                         break;
                     case 2:
-                        if (hasB) wst_tap_g2_m2(xp, wp, nq, cstepb, wstride);
-                        else wst_tap_g1_m2(xp, wp, nq, cstepb, wstride);
+                        if (hasB)
+                            wst_tap_g2_m2(xp, wp, nq, cstepb, wstride);
+                        else
+                            wst_tap_g1_m2(xp, wp, nq, cstepb, wstride);
                         break;
                     default:
-                        if (hasB) wst_tap_g2_m3(xp, wp, nq, cstepb, wstride);
-                        else wst_tap_g1_m3(xp, wp, nq, cstepb, wstride);
+                        if (hasB)
+                            wst_tap_g2_m3(xp, wp, nq, cstepb, wstride);
+                        else
+                            wst_tap_g1_m3(xp, wp, nq, cstepb, wstride);
                         break;
                     }
                 }

@@ -10,20 +10,24 @@
 
 #include <stdint.h>
 
-#define PSP_UART4_FIFO 0xBE500000
-#define PSP_UART4_STAT 0xBE500018
+#define PSP_UART4_FIFO  0xBE500000
+#define PSP_UART4_STAT  0xBE500018
 #define PSP_UART_TXFULL 0x20
 
 static inline uint32_t uart_load(uint32_t addr)
 {
     uint32_t v;
-    __asm__ __volatile__("lw %0, 0(%1)" : "=r"(v) : "r"(addr));
+    __asm__ __volatile__("lw %0, 0(%1)"
+                         : "=r"(v)
+                         : "r"(addr));
     return v;
 }
 
 static inline void uart_store(uint32_t addr, uint32_t v)
 {
-    __asm__ __volatile__("sw %0, 0(%1)" : : "r"(v), "r"(addr));
+    __asm__ __volatile__("sw %0, 0(%1)"
+                         :
+                         : "r"(v), "r"(addr));
 }
 
 void pspDebugSioPutchar(int ch)

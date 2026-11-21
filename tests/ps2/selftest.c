@@ -32,7 +32,8 @@ int _write(int fd, const void* buf, size_t count)
     (void)fd;
     const char* p = (const char*)buf;
     size_t i;
-    for (i = 0; i < count; i++) {
+    for (i = 0; i < count; i++)
+    {
         if (p[i] != '\r') scr_printf("%c", p[i]);
     }
     return (int)count;
@@ -42,7 +43,8 @@ int _write(int fd, const void* buf, size_t count)
 /* result bookkeeping                                                  */
 /* ------------------------------------------------------------------ */
 
-typedef union __attribute__((aligned(16))) {
+typedef union __attribute__((aligned(16)))
+{
     uint32x4_t v;
     int32x4_t sv;
     uint16x8_t uh;
@@ -60,7 +62,9 @@ typedef union __attribute__((aligned(16))) {
 
 static int g_pass, g_fail, g_group_fail;
 static const char* g_cur;
-static const char* g_sub; static unsigned g_got, g_exp; static int g_have;
+static const char* g_sub;
+static unsigned g_got, g_exp;
+static int g_have;
 
 static void begin(const char* name)
 {
@@ -71,12 +75,15 @@ static void begin(const char* name)
 
 static void end(void)
 {
-    if (g_group_fail) {
+    if (g_group_fail)
+    {
         printf("%-18s FAIL", g_cur);
         if (g_have) printf(" %s g=%08x e=%08x", g_sub, g_got, g_exp);
         printf("\n");
         g_fail++;
-    } else {
+    }
+    else
+    {
         printf("%-18s PASS\n", g_cur);
         g_pass++;
     }
@@ -85,10 +92,18 @@ static void end(void)
 static void ck128(const char* sub, U128 got, U128 exp)
 {
     int i;
-    for (i = 0; i < 4; i++) {
-        if (got.w[i] != exp.w[i]) {
+    for (i = 0; i < 4; i++)
+    {
+        if (got.w[i] != exp.w[i])
+        {
             g_group_fail = 1;
-            if (!g_have) { g_have = 1; g_sub = sub; g_got = got.w[i]; g_exp = exp.w[i]; }
+            if (!g_have)
+            {
+                g_have = 1;
+                g_sub = sub;
+                g_got = got.w[i];
+                g_exp = exp.w[i];
+            }
             return;
         }
     }
@@ -96,40 +111,54 @@ static void ck128(const char* sub, U128 got, U128 exp)
 
 static void ck32(const char* sub, uint32_t got, uint32_t exp)
 {
-    if (got != exp) {
+    if (got != exp)
+    {
         g_group_fail = 1;
-        if (!g_have) { g_have = 1; g_sub = sub; g_got = got; g_exp = exp; }
+        if (!g_have)
+        {
+            g_have = 1;
+            g_sub = sub;
+            g_got = got;
+            g_exp = exp;
+        }
     }
 }
 
 static U128 from_b(const int8_t* v)
 {
-    U128 r; int i;
+    U128 r;
+    int i;
     for (i = 0; i < 16; i++) r.sbv[i] = v[i];
     return r;
 }
 static U128 from_h(const int16_t* v)
 {
-    U128 r; int i;
+    U128 r;
+    int i;
     for (i = 0; i < 8; i++) r.shv[i] = v[i];
     return r;
 }
 static U128 from_u16(const uint16_t* v)
 {
-    U128 r; int i;
+    U128 r;
+    int i;
     for (i = 0; i < 8; i++) r.h[i] = v[i];
     return r;
 }
 static U128 from_w(const uint32_t* v)
 {
-    U128 r; int i;
+    U128 r;
+    int i;
     for (i = 0; i < 4; i++) r.w[i] = v[i];
     return r;
 }
 static U128 mk(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3)
 {
     U128 r;
-    r.w[0] = x0; r.w[1] = x1; r.w[2] = x2; r.w[3] = x3;
+    r.w[0] = x0;
+    r.w[1] = x1;
+    r.w[2] = x2;
+    r.w[3] = x3;
     return r;
 }
 
@@ -140,8 +169,11 @@ static U128 mk(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3)
 static inline uint32x4_t lq_sync(const void* p)
 {
     uint32x4_t r;
-    __asm__ __volatile__("" ::: "memory");
-    __asm__ __volatile__("lq %0,0(%1)" : "=r"(r) : "r"(p));
+    __asm__ __volatile__("" ::
+                             : "memory");
+    __asm__ __volatile__("lq %0,0(%1)"
+                         : "=r"(r)
+                         : "r"(p));
     return r;
 }
 
@@ -154,19 +186,27 @@ static inline uint32x4_t lq_sync(const void* p)
 static void rd_acc_lo(U128* dst)
 {
     uint32x4_t t;
-    __asm__ __volatile__("pmflo %0\n\tsq %0,0(%1)" : "=&r"(t) : "r"(dst) : "$hi", "$lo", "memory");
+    __asm__ __volatile__("pmflo %0\n\tsq %0,0(%1)"
+                         : "=&r"(t)
+                         : "r"(dst)
+                         : "$hi", "$lo", "memory");
 }
 static void rd_acc_hi(U128* dst)
 {
     uint32x4_t t;
-    __asm__ __volatile__("pmfhi %0\n\tsq %0,0(%1)" : "=&r"(t) : "r"(dst) : "$hi", "$lo", "memory");
+    __asm__ __volatile__("pmfhi %0\n\tsq %0,0(%1)"
+                         : "=&r"(t)
+                         : "r"(dst)
+                         : "$hi", "$lo", "memory");
 }
 /* load ACC from two 16-byte-aligned values using genuine 128-bit loads */
 static void set_acc_mem(const U128* lo, const U128* hi)
 {
     uint32x4_t t;
     __asm__ __volatile__("lq %0,0(%1)\n\tpmtlo %0\n\tlq %0,0(%2)\n\tpmthi %0"
-                         : "=&r"(t) : "r"(lo), "r"(hi) : "$hi", "$lo", "memory");
+                         : "=&r"(t)
+                         : "r"(lo), "r"(hi)
+                         : "$hi", "$lo", "memory");
 }
 
 /* ------------------------------------------------------------------ */
@@ -179,12 +219,14 @@ static void t_load_store(void)
     U128 out;
 
     begin("lq/sq");
-    __asm__ __volatile__("" ::: "memory");
-    __mmi_sq(&out, __mmi_lq(&a));           /* lq then sq (header's lq) */
+    __asm__ __volatile__("" ::
+                             : "memory");
+    __mmi_sq(&out, __mmi_lq(&a)); /* lq then sq (header's lq) */
     ck128("lq->sq", out, a);
 
     memset(&out, 0, sizeof(out));
-    __asm__ __volatile__("" ::: "memory");
+    __asm__ __volatile__("" ::
+                             : "memory");
     __mmi_sq(&out, __mmi_lq(&a));
     ck128("sq", out, a);
     end();
@@ -210,17 +252,18 @@ static void t_add_sub_w(void)
 
 static void t_add_sub_hb(void)
 {
-    static const uint16_t ah[8] = { 0x0001, 0x7fff, 0xffff, 0x8000, 0x1234, 0xfffe, 0x0000, 0x4000 };
-    static const uint16_t bh[8] = { 0xffff, 0x0001, 0x0002, 0x8000, 0x1111, 0x0003, 0xffff, 0x4000 };
-    static const uint8_t ab[16] = { 0x01, 0x7f, 0xff, 0x80, 0x34, 0xfe, 0x00, 0x40,
-                                    0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80 };
-    static const uint8_t bb[16] = { 0xff, 0x01, 0x02, 0x80, 0x11, 0x03, 0xff, 0x40,
-                                    0xf0, 0xe0, 0xd0, 0xc0, 0xb0, 0xa0, 0x90, 0x80 };
+    static const uint16_t ah[8] = {0x0001, 0x7fff, 0xffff, 0x8000, 0x1234, 0xfffe, 0x0000, 0x4000};
+    static const uint16_t bh[8] = {0xffff, 0x0001, 0x0002, 0x8000, 0x1111, 0x0003, 0xffff, 0x4000};
+    static const uint8_t ab[16] = {0x01, 0x7f, 0xff, 0x80, 0x34, 0xfe, 0x00, 0x40,
+                                   0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80};
+    static const uint8_t bb[16] = {0xff, 0x01, 0x02, 0x80, 0x11, 0x03, 0xff, 0x40,
+                                   0xf0, 0xe0, 0xd0, 0xc0, 0xb0, 0xa0, 0x90, 0x80};
     U128 a, b, e, out;
     int i;
 
     begin("paddh/b*");
-    a = from_u16(ah); b = from_u16(bh);
+    a = from_u16(ah);
+    b = from_u16(bh);
     for (i = 0; i < 8; i++) e.h[i] = (uint16_t)(a.h[i] + b.h[i]);
     __mmi_sq(&out, __mmi_paddh_u(lq_sync(&a), lq_sync(&b)));
     ck128("paddh", out, e);
@@ -266,22 +309,24 @@ static uint16_t sat_u16(int x)
 
 static void t_sat_signed(void)
 {
-    static const int8_t ab[16] = { 100, -100, 50, 127, -128, 0, 1, -1,
-                                   90, -90, 120, -120, 25, -25, 64, -64 };
-    static const int8_t bb[16] = { 100, -100, 80, 10, -10, 0, -2, 2,
-                                   90, -90, 10, -10, 100, -100, 64, -64 };
-    static const int16_t ah[8] = { 30000, -30000, 1000, 32767, -32768, 0, 20000, -20000 };
-    static const int16_t bh[8] = { 30000, -30000, 1000, 1, -1, 0, 20000, -20000 };
+    static const int8_t ab[16] = {100, -100, 50, 127, -128, 0, 1, -1,
+                                  90, -90, 120, -120, 25, -25, 64, -64};
+    static const int8_t bb[16] = {100, -100, 80, 10, -10, 0, -2, 2,
+                                  90, -90, 10, -10, 100, -100, 64, -64};
+    static const int16_t ah[8] = {30000, -30000, 1000, 32767, -32768, 0, 20000, -20000};
+    static const int16_t bh[8] = {30000, -30000, 1000, 1, -1, 0, 20000, -20000};
     U128 a, b, e, out;
     int i;
 
     begin("paddsb/paddsh");
-    a = from_b(ab); b = from_b(bb);
+    a = from_b(ab);
+    b = from_b(bb);
     for (i = 0; i < 16; i++) e.sbv[i] = sat_s8((int)a.sbv[i] + (int)b.sbv[i]);
     __mmi_sq(&out, (uint32x4_t)__mmi_paddsb_s((int32x4_t)lq_sync(&a), (int32x4_t)lq_sync(&b)));
     ck128("paddsb", out, e);
 
-    a = from_h(ah); b = from_h(bh);
+    a = from_h(ah);
+    b = from_h(bh);
     for (i = 0; i < 8; i++) e.shv[i] = sat_s16((int)a.shv[i] + (int)b.shv[i]);
     __mmi_sq(&out, (uint32x4_t)__mmi_paddsh_s((int32x4_t)lq_sync(&a), (int32x4_t)lq_sync(&b)));
     ck128("paddsh", out, e);
@@ -290,22 +335,24 @@ static void t_sat_signed(void)
 
 static void t_sat_unsigned_add(void)
 {
-    static const uint8_t ab[16] = { 200, 100, 250, 0, 10, 255, 128, 1,
-                                    50, 60, 70, 80, 90, 100, 110, 120 };
-    static const uint8_t bb[16] = { 100, 100, 5, 255, 250, 1, 128, 254,
-                                    200, 200, 200, 200, 200, 200, 200, 200 };
-    static const uint16_t ah[8] = { 60000, 1000, 65535, 0, 32768, 100, 40000, 65500 };
-    static const uint16_t bh[8] = { 60000, 2000, 1, 65535, 32768, 100, 30000, 100 };
+    static const uint8_t ab[16] = {200, 100, 250, 0, 10, 255, 128, 1,
+                                   50, 60, 70, 80, 90, 100, 110, 120};
+    static const uint8_t bb[16] = {100, 100, 5, 255, 250, 1, 128, 254,
+                                   200, 200, 200, 200, 200, 200, 200, 200};
+    static const uint16_t ah[8] = {60000, 1000, 65535, 0, 32768, 100, 40000, 65500};
+    static const uint16_t bh[8] = {60000, 2000, 1, 65535, 32768, 100, 30000, 100};
     U128 a, b, e, out;
     int i;
 
     begin("paddub/padduh");
-    a = from_b((const int8_t*)ab); b = from_b((const int8_t*)bb);
+    a = from_b((const int8_t*)ab);
+    b = from_b((const int8_t*)bb);
     for (i = 0; i < 16; i++) e.b[i] = sat_u8((int)a.b[i] + (int)b.b[i]);
     __mmi_sq(&out, __mmi_paddub_u(lq_sync(&a), lq_sync(&b)));
     ck128("paddub", out, e);
 
-    a = from_u16(ah); b = from_u16(bh);
+    a = from_u16(ah);
+    b = from_u16(bh);
     for (i = 0; i < 8; i++) e.h[i] = sat_u16((int)a.h[i] + (int)b.h[i]);
     __mmi_sq(&out, __mmi_padduh_u(lq_sync(&a), lq_sync(&b)));
     ck128("padduh", out, e);
@@ -314,22 +361,24 @@ static void t_sat_unsigned_add(void)
 
 static void t_sat_unsigned_sub(void)
 {
-    static const uint8_t ab[16] = { 5, 200, 0, 255, 100, 50, 128, 1,
-                                    10, 20, 30, 40, 50, 60, 70, 80 };
-    static const uint8_t bb[16] = { 10, 50, 255, 255, 200, 60, 129, 0,
-                                    10, 20, 30, 40, 50, 60, 70, 80 };
-    static const uint16_t ah[8] = { 5, 60000, 0, 65535, 50000, 1000, 32768, 65535 };
-    static const uint16_t bh[8] = { 10, 60000, 65535, 65535, 60000, 2000, 65535, 0 };
+    static const uint8_t ab[16] = {5, 200, 0, 255, 100, 50, 128, 1,
+                                   10, 20, 30, 40, 50, 60, 70, 80};
+    static const uint8_t bb[16] = {10, 50, 255, 255, 200, 60, 129, 0,
+                                   10, 20, 30, 40, 50, 60, 70, 80};
+    static const uint16_t ah[8] = {5, 60000, 0, 65535, 50000, 1000, 32768, 65535};
+    static const uint16_t bh[8] = {10, 60000, 65535, 65535, 60000, 2000, 65535, 0};
     U128 a, b, e, out;
     int i;
 
     begin("psubub/psubuh");
-    a = from_b((const int8_t*)ab); b = from_b((const int8_t*)bb);
+    a = from_b((const int8_t*)ab);
+    b = from_b((const int8_t*)bb);
     for (i = 0; i < 16; i++) e.b[i] = sat_u8((int)a.b[i] - (int)b.b[i]);
     __mmi_sq(&out, __mmi_psubub_u(lq_sync(&a), lq_sync(&b)));
     ck128("psubub", out, e);
 
-    a = from_u16(ah); b = from_u16(bh);
+    a = from_u16(ah);
+    b = from_u16(bh);
     for (i = 0; i < 8; i++) e.h[i] = sat_u16((int)a.h[i] - (int)b.h[i]);
     __mmi_sq(&out, __mmi_psubuh_u(lq_sync(&a), lq_sync(&b)));
     ck128("psubuh", out, e);
@@ -341,14 +390,15 @@ static void t_pmulth(void)
     /* EE PMULTH: 8 signed 16x16 products p[0..7].
        rd = { p0, p2, p4, p6 }, LO = { p0, p1, p4, p5 },
        HI = { p2, p3, p6, p7 }                                   */
-    static const int16_t av[8] = { 1, -2, 3, -4, 5, -6, 7, -8 };
-    static const int16_t bv[8] = { 10, 20, 30, 40, 50, 60, 70, 80 };
+    static const int16_t av[8] = {1, -2, 3, -4, 5, -6, 7, -8};
+    static const int16_t bv[8] = {10, 20, 30, 40, 50, 60, 70, 80};
     int32_t p[8];
     U128 a, b, e, out, lo, hi;
     int i;
 
     begin("pmulth");
-    a = from_h(av); b = from_h(bv);
+    a = from_h(av);
+    b = from_h(bv);
     for (i = 0; i < 8; i++) p[i] = (int32_t)a.shv[i] * (int32_t)b.shv[i];
 
     __mmi_sq(&out, (uint32x4_t)__mmi_pmulth((int16x8_t)lq_sync(&a), (int16x8_t)lq_sync(&b)));
@@ -370,14 +420,15 @@ static void t_pmaddh(void)
        Sums: s0=LO0+p0, s1=LO1+p1, s2=HI0+p2, s3=HI1+p3,
              s4=LO2+p4, s5=LO3+p5, s6=HI2+p6, s7=HI3+p7
        LO = {s0,s1,s4,s5}; HI = {s2,s3,s6,s7}; rd = {s0,s2,s4,s6}. */
-    static const int16_t av[8] = { 1, 2, 3, -4, 5, -6, 7, -8 };
-    static const int16_t bv[8] = { 10, 20, 30, 40, 50, 60, 70, 80 };
+    static const int16_t av[8] = {1, 2, 3, -4, 5, -6, 7, -8};
+    static const int16_t bv[8] = {10, 20, 30, 40, 50, 60, 70, 80};
     U128 a, b, ilo, ihi, elo, ehi, e, out, lo, hi, zero = mk(0, 0, 0, 0);
     int32_t p[8];
     int i;
 
     begin("pmaddh");
-    a = from_h(av); b = from_h(bv);
+    a = from_h(av);
+    b = from_h(bv);
     ilo = mk(100, 200, 300, 400);
     ihi = mk(500, 600, 700, 800);
 
@@ -385,7 +436,8 @@ static void t_pmaddh(void)
        the R5900 HI/LO with the MMI accumulator) */
     for (i = 0; i < 8; i++) p[i] = (int32_t)a.shv[i] * (int32_t)b.shv[i];
 
-    elo = ilo; ehi = ihi;
+    elo = ilo;
+    ehi = ihi;
     elo.w[0] += (uint32_t)p[0];
     elo.w[1] += (uint32_t)p[1];
     ehi.w[0] += (uint32_t)p[2];
@@ -398,7 +450,7 @@ static void t_pmaddh(void)
 
     set_acc_mem(&ilo, &ihi);
     __mmi_sq(&out, (uint32x4_t)__mmi_pmaddh((int32x4_t)zero.v,
-                 (int16x8_t)lq_sync(&a), (int16x8_t)lq_sync(&b)));
+                                            (int16x8_t)lq_sync(&a), (int16x8_t)lq_sync(&b)));
     ck128("rd", out, e);
     rd_acc_lo(&lo);
     ck128("lo", lo, elo);
@@ -411,8 +463,8 @@ static void t_pmultw(void)
 {
     /* PMULTW: prod0 = rs.w0*rt.w0, prod1 = rs.w2*rt.w2 (each 32x32->64).
        rd.d[0]=prod0, rd.d[1]=prod1; LO.d[i]=prod_i and HI.d[i]=prod_i. */
-    U128 a = mk(3, 0xfffffffb, 7, 0xfffffff7);       /* { 3, -5, 7, -9 } */
-    U128 b = mk(4, 6, 0xfffffff8, 10);               /* { 4,  6,-8, 10 } */
+    U128 a = mk(3, 0xfffffffb, 7, 0xfffffff7); /* { 3, -5, 7, -9 } */
+    U128 b = mk(4, 6, 0xfffffff8, 10);         /* { 4,  6,-8, 10 } */
     int64_t p0, p2;
     U128 e, out, lo, hi;
 
@@ -478,12 +530,12 @@ static void t_pmaddw(void)
     U128 e, out, lo, hi, zero = mk(0, 0, 0, 0);
 
     begin("pmaddw");
-    s0 = (uint64_t)5 + (uint64_t)(int64_t)(2 * 4);   /* 13 */
-    s1 = (uint64_t)9 + (uint64_t)(int64_t)(5 * 8);   /* 49 */
+    s0 = (uint64_t)5 + (uint64_t)(int64_t)(2 * 4); /* 13 */
+    s1 = (uint64_t)9 + (uint64_t)(int64_t)(5 * 8); /* 49 */
 
     set_acc_mem(&acc_lo, &acc_hi);
     __mmi_sq(&out, (uint32x4_t)__mmi_pmaddw((int32x4_t)zero.v,
-                 (int32x4_t)lq_sync(&a), (int32x4_t)lq_sync(&b)));
+                                            (int32x4_t)lq_sync(&a), (int32x4_t)lq_sync(&b)));
     e = mk((uint32_t)s0, (uint32_t)(s0 >> 32), (uint32_t)s1, (uint32_t)(s1 >> 32));
     ck128("rd", out, e);
 
@@ -504,8 +556,8 @@ static void t_pmadduw(void)
     U128 e, out, lo, hi, zero = mk(0, 0, 0, 0);
 
     begin("pmadduw");
-    q0 = (uint64_t)5 + (uint64_t)a.w[0] * b.w[0];    /*  5 + 21 = 26 */
-    q2 = (uint64_t)9 + (uint64_t)a.w[2] * b.w[2];    /*  9 + 45 = 54 */
+    q0 = (uint64_t)5 + (uint64_t)a.w[0] * b.w[0]; /*  5 + 21 = 26 */
+    q2 = (uint64_t)9 + (uint64_t)a.w[2] * b.w[2]; /*  9 + 45 = 54 */
 
     set_acc_mem(&acc_lo, &acc_hi);
     __mmi_sq(&out, __mmi_pmadduw(lq_sync(&a), lq_sync(&b)));
@@ -529,28 +581,52 @@ static void t_pext_pcpy(void)
     int i;
 
     begin("pext/pcpy");
-    for (i = 0; i < 16; i++) { a.b[i] = (uint8_t)i; b.b[i] = (uint8_t)(0x10 + i); }
+    for (i = 0; i < 16; i++)
+    {
+        a.b[i] = (uint8_t)i;
+        b.b[i] = (uint8_t)(0x10 + i);
+    }
 
-    for (i = 0; i < 8; i++) { e.b[2 * i] = b.b[i]; e.b[2 * i + 1] = a.b[i]; }
+    for (i = 0; i < 8; i++)
+    {
+        e.b[2 * i] = b.b[i];
+        e.b[2 * i + 1] = a.b[i];
+    }
     __mmi_sq(&out, (uint32x4_t)__mmi_pextlb_s((int8x16_t)lq_sync(&a), (int8x16_t)lq_sync(&b)));
     ck128("pextlb", out, e);
     __mmi_sq(&out, (uint32x4_t)__mmi_pextlb_u((uint8x16_t)lq_sync(&a), (uint8x16_t)lq_sync(&b)));
     ck128("pextlb_u", out, e);
 
-    for (i = 0; i < 8; i++) { e.b[2 * i] = b.b[8 + i]; e.b[2 * i + 1] = a.b[8 + i]; }
+    for (i = 0; i < 8; i++)
+    {
+        e.b[2 * i] = b.b[8 + i];
+        e.b[2 * i + 1] = a.b[8 + i];
+    }
     __mmi_sq(&out, (uint32x4_t)__mmi_pextub_s((int8x16_t)lq_sync(&a), (int8x16_t)lq_sync(&b)));
     ck128("pextub", out, e);
     __mmi_sq(&out, (uint32x4_t)__mmi_pextub_u((uint8x16_t)lq_sync(&a), (uint8x16_t)lq_sync(&b)));
     ck128("pextub_u", out, e);
 
-    for (i = 0; i < 8; i++) { a.h[i] = (uint16_t)(0x0100 + i); b.h[i] = (uint16_t)(0x1000 + 0x100 * i); }
-    for (i = 0; i < 4; i++) { e.h[2 * i] = b.h[i]; e.h[2 * i + 1] = a.h[i]; }
+    for (i = 0; i < 8; i++)
+    {
+        a.h[i] = (uint16_t)(0x0100 + i);
+        b.h[i] = (uint16_t)(0x1000 + 0x100 * i);
+    }
+    for (i = 0; i < 4; i++)
+    {
+        e.h[2 * i] = b.h[i];
+        e.h[2 * i + 1] = a.h[i];
+    }
     __mmi_sq(&out, (uint32x4_t)__mmi_pextlh_s((int16x8_t)lq_sync(&a), (int16x8_t)lq_sync(&b)));
     ck128("pextlh", out, e);
     __mmi_sq(&out, __mmi_pextlh_u((uint16x8_t)lq_sync(&a), (uint16x8_t)lq_sync(&b)));
     ck128("pextlh_u", out, e);
 
-    for (i = 0; i < 4; i++) { e.h[2 * i] = b.h[4 + i]; e.h[2 * i + 1] = a.h[4 + i]; }
+    for (i = 0; i < 4; i++)
+    {
+        e.h[2 * i] = b.h[4 + i];
+        e.h[2 * i + 1] = a.h[4 + i];
+    }
     __mmi_sq(&out, (uint32x4_t)__mmi_pextuh_s((int16x8_t)lq_sync(&a), (int16x8_t)lq_sync(&b)));
     ck128("pextuh", out, e);
     __mmi_sq(&out, __mmi_pextuh_u((uint16x8_t)lq_sync(&a), (uint16x8_t)lq_sync(&b)));
@@ -588,7 +664,11 @@ static void t_compare(void)
     int i;
 
     begin("pceq/pcgt");
-    for (i = 0; i < 16; i++) { a.sbv[i] = (int8_t)(i * 7 - 50); b.sbv[i] = a.sbv[i]; }
+    for (i = 0; i < 16; i++)
+    {
+        a.sbv[i] = (int8_t)(i * 7 - 50);
+        b.sbv[i] = a.sbv[i];
+    }
     b.sbv[3] = (int8_t)(a.sbv[3] + 1);
     b.sbv[10] = (int8_t)(a.sbv[10] - 1);
     for (i = 0; i < 16; i++) e.sbv[i] = (a.sbv[i] == b.sbv[i]) ? -1 : 0;
@@ -598,7 +678,11 @@ static void t_compare(void)
     __mmi_sq(&out, __mmi_pcmpgtb_u(lq_sync(&a), lq_sync(&b)));
     ck128("pcgtb", out, e);
 
-    for (i = 0; i < 8; i++) { a.shv[i] = (int16_t)(i * 1234 - 4000); b.shv[i] = a.shv[i]; }
+    for (i = 0; i < 8; i++)
+    {
+        a.shv[i] = (int16_t)(i * 1234 - 4000);
+        b.shv[i] = a.shv[i];
+    }
     b.shv[1] = (int16_t)(a.shv[1] + 1);
     b.shv[6] = (int16_t)(a.shv[6] - 1);
     for (i = 0; i < 8; i++) e.shv[i] = (a.shv[i] == b.shv[i]) ? -1 : 0;
@@ -608,7 +692,11 @@ static void t_compare(void)
     __mmi_sq(&out, __mmi_pcmpgth_u(lq_sync(&a), lq_sync(&b)));
     ck128("pcgth", out, e);
 
-    for (i = 0; i < 4; i++) { a.sw[i] = i * 100000000 - 150000000; b.sw[i] = a.sw[i]; }
+    for (i = 0; i < 4; i++)
+    {
+        a.sw[i] = i * 100000000 - 150000000;
+        b.sw[i] = a.sw[i];
+    }
     b.sw[1] += 1;
     b.sw[2] -= 1;
     for (i = 0; i < 4; i++) e.sw[i] = (a.sw[i] == b.sw[i]) ? -1 : 0;
@@ -622,17 +710,18 @@ static void t_compare(void)
 
 static void t_minmax_abs(void)
 {
-    static const int32_t aw[4] = { 5, -3, 100, (int32_t)0x80000000u };
-    static const int32_t bw[4] = { 7, -10, 50, 0x7fffffff };
-    static const int16_t ah[8] = { 5, -3, 30000, -32768, 100, -100, 0, 32767 };
-    static const int16_t bh[8] = { 7, -10, -30000, 32767, 50, -50, 1, -32768 };
-    static const int16_t abs_h[8] = { 5, -5, 0, -32768, 32767, -1, 1234, -1234 };
-    static const int32_t abs_w[4] = { 5, -5, 0, (int32_t)0x80000000u };
+    static const int32_t aw[4] = {5, -3, 100, (int32_t)0x80000000u};
+    static const int32_t bw[4] = {7, -10, 50, 0x7fffffff};
+    static const int16_t ah[8] = {5, -3, 30000, -32768, 100, -100, 0, 32767};
+    static const int16_t bh[8] = {7, -10, -30000, 32767, 50, -50, 1, -32768};
+    static const int16_t abs_h[8] = {5, -5, 0, -32768, 32767, -1, 1234, -1234};
+    static const int32_t abs_w[4] = {5, -5, 0, (int32_t)0x80000000u};
     U128 a, b, e, out;
     int i;
 
     begin("pmin/pmax/pabs");
-    a = from_w((const uint32_t*)aw); b = from_w((const uint32_t*)bw);
+    a = from_w((const uint32_t*)aw);
+    b = from_w((const uint32_t*)bw);
     for (i = 0; i < 4; i++) e.sw[i] = (a.sw[i] < b.sw[i]) ? a.sw[i] : b.sw[i];
     __mmi_sq(&out, (uint32x4_t)__mmi_pminw((int32x4_t)lq_sync(&a), (int32x4_t)lq_sync(&b)));
     ck128("pminw", out, e);
@@ -640,7 +729,8 @@ static void t_minmax_abs(void)
     __mmi_sq(&out, (uint32x4_t)__mmi_pmaxw((int32x4_t)lq_sync(&a), (int32x4_t)lq_sync(&b)));
     ck128("pmaxw", out, e);
 
-    a = from_h(ah); b = from_h(bh);
+    a = from_h(ah);
+    b = from_h(bh);
     for (i = 0; i < 8; i++) e.shv[i] = (a.shv[i] < b.shv[i]) ? a.shv[i] : b.shv[i];
     __mmi_sq(&out, (uint32x4_t)__mmi_pminh((int16x8_t)lq_sync(&a), (int16x8_t)lq_sync(&b)));
     ck128("pminh", out, e);
@@ -649,7 +739,8 @@ static void t_minmax_abs(void)
     ck128("pmaxh", out, e);
 
     a = from_h(abs_h);
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < 8; i++)
+    {
         int v = a.shv[i];
         e.shv[i] = (int16_t)((v == -32768) ? 32767 : (v < 0 ? -v : v));
     }
@@ -657,7 +748,8 @@ static void t_minmax_abs(void)
     ck128("pabsh", out, e);
 
     a = from_w((const uint32_t*)abs_w);
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < 4; i++)
+    {
         int32_t v = a.sw[i];
         e.sw[i] = (v == (int32_t)0x80000000u) ? 0x7fffffff : (v < 0 ? -v : v);
     }
@@ -668,8 +760,8 @@ static void t_minmax_abs(void)
 
 static void t_shifts(void)
 {
-    static const int16_t hv[8] = { (int16_t)0x1234, (int16_t)0x8001, (int16_t)0xdead, 0x7fff,
-                                   (int16_t)0xfffe, 0x0001, 0x4000, (int16_t)0x8000 };
+    static const int16_t hv[8] = {(int16_t)0x1234, (int16_t)0x8001, (int16_t)0xdead, 0x7fff,
+                                  (int16_t)0xfffe, 0x0001, 0x4000, (int16_t)0x8000};
     U128 a, e, out;
     int i;
 
@@ -704,18 +796,30 @@ static void t_permute(void)
     int i;
 
     begin("pinth/prevh/prot3w");
-    for (i = 0; i < 8; i++) { a.shv[i] = (int16_t)(0x0100 + 0x10 * i); b.shv[i] = (int16_t)(0x2000 + 0x100 * i); }
+    for (i = 0; i < 8; i++)
+    {
+        a.shv[i] = (int16_t)(0x0100 + 0x10 * i);
+        b.shv[i] = (int16_t)(0x2000 + 0x100 * i);
+    }
 
     /* PINTH: rd.h = { b.h0, a.h4, b.h1, a.h5, b.h2, a.h6, b.h3, a.h7 } */
-    e.shv[0] = b.shv[0]; e.shv[1] = a.shv[4];
-    e.shv[2] = b.shv[1]; e.shv[3] = a.shv[5];
-    e.shv[4] = b.shv[2]; e.shv[5] = a.shv[6];
-    e.shv[6] = b.shv[3]; e.shv[7] = a.shv[7];
+    e.shv[0] = b.shv[0];
+    e.shv[1] = a.shv[4];
+    e.shv[2] = b.shv[1];
+    e.shv[3] = a.shv[5];
+    e.shv[4] = b.shv[2];
+    e.shv[5] = a.shv[6];
+    e.shv[6] = b.shv[3];
+    e.shv[7] = a.shv[7];
     __mmi_sq(&out, (uint32x4_t)__mmi_pinth((int16x8_t)lq_sync(&a), (int16x8_t)lq_sync(&b)));
     ck128("pinth", out, e);
 
     /* PREVH: reverse each 64-bit half */
-    for (i = 0; i < 4; i++) { e.shv[i] = a.shv[3 - i]; e.shv[4 + i] = a.shv[7 - i]; }
+    for (i = 0; i < 4; i++)
+    {
+        e.shv[i] = a.shv[3 - i];
+        e.shv[4 + i] = a.shv[7 - i];
+    }
     __mmi_sq(&out, (uint32x4_t)__mmi_prevh((int16x8_t)lq_sync(&a)));
     ck128("prevh", out, e);
 
@@ -753,7 +857,9 @@ static U128 vadd_q(U128 a, U128 b)
     U128 r;
     __asm__ __volatile__("lqc2 $vf1,0(%1)\n\tlqc2 $vf2,0(%2)\n\t"
                          "vadd.xyzw $vf3,$vf1,$vf2\n\tsqc2 $vf3,%0"
-                         : "=m"(r) : "r"(&a), "r"(&b) : "memory");
+                         : "=m"(r)
+                         : "r"(&a), "r"(&b)
+                         : "memory");
     return r;
 }
 static U128 vsub_q(U128 a, U128 b)
@@ -761,7 +867,9 @@ static U128 vsub_q(U128 a, U128 b)
     U128 r;
     __asm__ __volatile__("lqc2 $vf1,0(%1)\n\tlqc2 $vf2,0(%2)\n\t"
                          "vsub.xyzw $vf3,$vf1,$vf2\n\tsqc2 $vf3,%0"
-                         : "=m"(r) : "r"(&a), "r"(&b) : "memory");
+                         : "=m"(r)
+                         : "r"(&a), "r"(&b)
+                         : "memory");
     return r;
 }
 static U128 vmul_q(U128 a, U128 b)
@@ -769,7 +877,9 @@ static U128 vmul_q(U128 a, U128 b)
     U128 r;
     __asm__ __volatile__("lqc2 $vf1,0(%1)\n\tlqc2 $vf2,0(%2)\n\t"
                          "vmul.xyzw $vf3,$vf1,$vf2\n\tsqc2 $vf3,%0"
-                         : "=m"(r) : "r"(&a), "r"(&b) : "memory");
+                         : "=m"(r)
+                         : "r"(&a), "r"(&b)
+                         : "memory");
     return r;
 }
 static U128 vmax_q(U128 a, U128 b)
@@ -777,7 +887,9 @@ static U128 vmax_q(U128 a, U128 b)
     U128 r;
     __asm__ __volatile__("lqc2 $vf1,0(%1)\n\tlqc2 $vf2,0(%2)\n\t"
                          "vmax.xyzw $vf3,$vf1,$vf2\n\tsqc2 $vf3,%0"
-                         : "=m"(r) : "r"(&a), "r"(&b) : "memory");
+                         : "=m"(r)
+                         : "r"(&a), "r"(&b)
+                         : "memory");
     return r;
 }
 static U128 vmini_q(U128 a, U128 b)
@@ -785,7 +897,9 @@ static U128 vmini_q(U128 a, U128 b)
     U128 r;
     __asm__ __volatile__("lqc2 $vf1,0(%1)\n\tlqc2 $vf2,0(%2)\n\t"
                          "vmini.xyzw $vf3,$vf1,$vf2\n\tsqc2 $vf3,%0"
-                         : "=m"(r) : "r"(&a), "r"(&b) : "memory");
+                         : "=m"(r)
+                         : "r"(&a), "r"(&b)
+                         : "memory");
     return r;
 }
 
@@ -799,7 +913,9 @@ static U128 vmadd_test(U128 v, U128 u, U128 w, U128 x)
         "vopmula.xyz $ACC,$vf1,$vf2\n\t"
         "vmadd.xyz $vf5,$vf3,$vf4\n\t"
         "sqc2 $vf5,%0"
-        : "=m"(r) : "r"(&v), "r"(&u), "r"(&w), "r"(&x) : "memory");
+        : "=m"(r)
+        : "r"(&v), "r"(&u), "r"(&w), "r"(&x)
+        : "memory");
     return r;
 }
 
@@ -814,21 +930,29 @@ static float hsum4(const float* in)
         "vaddz.x $vf3,$vf2,$vf1\n\t"
         "vaddw.x $vf4,$vf3,$vf1\n\t"
         "qmfc2.ni %0,$vf4"
-        : "=r"(bits) : "r"(in) : "memory");
+        : "=r"(bits)
+        : "r"(in)
+        : "memory");
     __asm__ __volatile__("mtc1 %1,$f0\n\tswc1 $f0,0(%0)"
-                         : : "r"(&out), "r"(bits) : "$f0", "memory");
+                         :
+                         : "r"(&out), "r"(bits)
+                         : "$f0", "memory");
     return out;
 }
 
 static void t_vops(void)
 {
     U128 a, b, e, r;
-    float va[4] = { 1.5f, -2.25f, 3.0f, 0.5f };
-    float vb[4] = { 2.5f, 4.0f, -1.5f, 8.0f };
+    float va[4] = {1.5f, -2.25f, 3.0f, 0.5f};
+    float vb[4] = {2.5f, 4.0f, -1.5f, 8.0f};
     int i;
 
     begin("vadd/sub/mul/max");
-    for (i = 0; i < 4; i++) { a.f[i] = va[i]; b.f[i] = vb[i]; }
+    for (i = 0; i < 4; i++)
+    {
+        a.f[i] = va[i];
+        b.f[i] = vb[i];
+    }
 
     for (i = 0; i < 4; i++) e.f[i] = va[i] + vb[i];
     r = vadd_q(a, b);
@@ -853,14 +977,29 @@ static void t_vmadd(void)
     U128 v, u, w, x, e, r;
 
     begin("vmadd");
-    v.f[0] = 1.0f;  v.f[1] = 1.0f;  v.f[2] = 2.0f;  v.f[3] = 0.0f;
-    u.f[0] = 0.5f;  u.f[1] = -1.0f; u.f[2] = 4.0f;  u.f[3] = 0.0f;
-    w.f[0] = 1.5f;  w.f[1] = -2.0f; w.f[2] = 0.5f;  w.f[3] = 0.0f;
-    x.f[0] = 2.0f;  x.f[1] = 3.0f;  x.f[2] = -4.0f; x.f[3] = 0.0f;
+    v.f[0] = 1.0f;
+    v.f[1] = 1.0f;
+    v.f[2] = 2.0f;
+    v.f[3] = 0.0f;
+    u.f[0] = 0.5f;
+    u.f[1] = -1.0f;
+    u.f[2] = 4.0f;
+    u.f[3] = 0.0f;
+    w.f[0] = 1.5f;
+    w.f[1] = -2.0f;
+    w.f[2] = 0.5f;
+    w.f[3] = 0.0f;
+    x.f[0] = 2.0f;
+    x.f[1] = 3.0f;
+    x.f[2] = -4.0f;
+    x.f[3] = 0.0f;
 
     /* ACC = (v.y*u.z, v.z*u.x, v.x*u.y) = (4, 1, -1)
        out = ACC + w*x = (7, -5, -3)                             */
-    e.f[0] = 7.0f; e.f[1] = -5.0f; e.f[2] = -3.0f; e.f[3] = 0.0f;
+    e.f[0] = 7.0f;
+    e.f[1] = -5.0f;
+    e.f[2] = -3.0f;
+    e.f[3] = 0.0f;
     r = vmadd_test(v, u, w, x);
     ck32("vmadd.x", r.w[0], e.w[0]);
     ck32("vmadd.y", r.w[1], e.w[1]);
@@ -874,17 +1013,28 @@ static void t_hsum(void)
     float got, exp, d, lim;
 
     begin("vsum (vaddy/z/w)");
-    in[0] = 1.1f; in[1] = 2.2f; in[2] = 3.3f; in[3] = 4.4f;
+    in[0] = 1.1f;
+    in[1] = 2.2f;
+    in[2] = 3.3f;
+    in[3] = 4.4f;
     got = hsum4(in);
     exp = ((in[0] + in[1]) + in[2]) + in[3];
     d = got - exp;
     if (d < 0.0f) d = -d;
     lim = 1e-5f * (exp < 0.0f ? -exp : exp) + 1e-6f;
-    if (d > lim) {
+    if (d > lim)
+    {
         U128 g, x;
-        g.f[0] = got; x.f[0] = exp;
+        g.f[0] = got;
+        x.f[0] = exp;
         g_group_fail = 1;
-        if (!g_have) { g_have = 1; g_sub = "hsum"; g_got = g.w[0]; g_exp = x.w[0]; }
+        if (!g_have)
+        {
+            g_have = 1;
+            g_sub = "hsum";
+            g_got = g.w[0];
+            g_exp = x.w[0];
+        }
     }
     end();
 }
@@ -896,12 +1046,16 @@ static void t_lqc2_sqc2(void)
 
     begin("lqc2/sqc2");
     __asm__ __volatile__("lqc2 $vf1,0(%1)\n\tsqc2 $vf1,%0"
-                         : "=m"(dst) : "r"(&src) : "memory");
+                         : "=m"(dst)
+                         : "r"(&src)
+                         : "memory");
     ck128("c2 roundtrip", dst, src);
 
     /* second independent load/store pair */
     __asm__ __volatile__("lqc2 $vf2,0(%1)\n\tsqc2 $vf2,%0"
-                         : "=m"(r) : "r"(&dst) : "memory");
+                         : "=m"(r)
+                         : "r"(&dst)
+                         : "memory");
     ck128("lqc2 again", r, src);
     end();
 }
@@ -915,8 +1069,8 @@ static void t_lqc2_sqc2(void)
 static void t_phmadh(void)
 {
     /* rd.w[i] = a.h[2*i]*b.h[2*i] + a.h[2*i+1]*b.h[2*i+1] */
-    static const int16_t ah[8] = { 3, -5, 1000, -1000, 32767, 32767, -2, 9 };
-    static const int16_t bh[8] = { 7, 11, 3, 4, 2, -2, 8, -6 };
+    static const int16_t ah[8] = {3, -5, 1000, -1000, 32767, 32767, -2, 9};
+    static const int16_t bh[8] = {7, 11, 3, 4, 2, -2, 8, -6};
     U128 a = from_h(ah), b = from_h(bh), e, out;
     int i;
 
@@ -931,8 +1085,8 @@ static void t_phmadh(void)
 static void t_phmsbh(void)
 {
     /* rd.w[i] = odd product - even product */
-    static const int16_t ah[8] = { 3, -5, 1000, -1000, 6, -6, 2, 9 };
-    static const int16_t bh[8] = { 7, 11, 3, 4, 8, 8, -4, 5 };
+    static const int16_t ah[8] = {3, -5, 1000, -1000, 6, -6, 2, 9};
+    static const int16_t bh[8] = {7, 11, 3, 4, 8, 8, -4, 5};
     U128 a = from_h(ah), b = from_h(bh), e, out;
     int i;
 
@@ -950,8 +1104,8 @@ static void t_pmsubh(void)
        products, each subtracted from the even accumulator word:
        rd.w[0] = acc.w[0] - a.h[0]*b.h[0],  rd.w[1] = acc.w[0] - a.h[2]*b.h[2],
        rd.w[2] = acc.w[2] - a.h[4]*b.h[4],  rd.w[3] = acc.w[2] - a.h[6]*b.h[6]. */
-    static const int16_t ah[8] = { 4, 1, -3, 2, 5, 0, -7, 8 };
-    static const int16_t bh[8] = { 6, 1, 9, 2, -2, 1, 3, 1 };
+    static const int16_t ah[8] = {4, 1, -3, 2, 5, 0, -7, 8};
+    static const int16_t bh[8] = {6, 1, 9, 2, -2, 1, 3, 1};
     U128 a = from_h(ah), b = from_h(bh);
     U128 acc = mk(100, 200, -50, 1000);
     U128 e, out;
@@ -981,8 +1135,10 @@ static void t_pmsubw(void)
     begin("pmsubw");
     d0 = ((int64_t)acc.sw[0] << 32 | (uint32_t)acc.sw[0]) - (int64_t)a.sw[0] * b.sw[0];
     d1 = ((int64_t)acc.sw[2] << 32 | (uint32_t)acc.sw[2]) - (int64_t)a.sw[2] * b.sw[2];
-    e.w[0] = (uint32_t)d0; e.w[1] = (uint32_t)(d0 >> 32);
-    e.w[2] = (uint32_t)d1; e.w[3] = (uint32_t)(d1 >> 32);
+    e.w[0] = (uint32_t)d0;
+    e.w[1] = (uint32_t)(d0 >> 32);
+    e.w[2] = (uint32_t)d1;
+    e.w[3] = (uint32_t)(d1 >> 32);
     __mmi_sq(&out, (uint32x4_t)__mmi_pmsubw((int32x4_t)lq_sync(&acc),
                                             (int32x4_t)lq_sync(&a), (int32x4_t)lq_sync(&b)));
     ck128("pmsubw", out, e);
@@ -996,19 +1152,38 @@ static void t_ppac(void)
 
     begin("ppacb/ppach/ppacw");
 
-    for (i = 0; i < 16; i++) { rs.b[i] = (uint8_t)(0x10 + i); rt.b[i] = (uint8_t)(0x80 + i); }
-    for (i = 0; i < 8; i++) { e.b[i] = rt.b[2 * i]; e.b[8 + i] = rs.b[2 * i]; }
+    for (i = 0; i < 16; i++)
+    {
+        rs.b[i] = (uint8_t)(0x10 + i);
+        rt.b[i] = (uint8_t)(0x80 + i);
+    }
+    for (i = 0; i < 8; i++)
+    {
+        e.b[i] = rt.b[2 * i];
+        e.b[8 + i] = rs.b[2 * i];
+    }
     __mmi_sq(&out, __mmi_ppacb(lq_sync(&rs), lq_sync(&rt)));
     ck128("ppacb", out, e);
 
-    for (i = 0; i < 8; i++) { rs.h[i] = (uint16_t)(0x1000 + i); rt.h[i] = (uint16_t)(0x2000 + i); }
-    for (i = 0; i < 4; i++) { e.h[i] = rt.h[2 * i]; e.h[4 + i] = rs.h[2 * i]; }
+    for (i = 0; i < 8; i++)
+    {
+        rs.h[i] = (uint16_t)(0x1000 + i);
+        rt.h[i] = (uint16_t)(0x2000 + i);
+    }
+    for (i = 0; i < 4; i++)
+    {
+        e.h[i] = rt.h[2 * i];
+        e.h[4 + i] = rs.h[2 * i];
+    }
     __mmi_sq(&out, __mmi_ppach(lq_sync(&rs), lq_sync(&rt)));
     ck128("ppach", out, e);
 
     rs = mk(0x11111111, 0x22222222, 0x33333333, 0x44444444);
     rt = mk(0xaaaaaaaa, 0xbbbbbbbb, 0xcccccccc, 0xdddddddd);
-    e.w[0] = rt.w[0]; e.w[1] = rt.w[2]; e.w[2] = rs.w[0]; e.w[3] = rs.w[2];
+    e.w[0] = rt.w[0];
+    e.w[1] = rt.w[2];
+    e.w[2] = rs.w[0];
+    e.w[3] = rs.w[2];
     __mmi_sq(&out, __mmi_ppacw(lq_sync(&rs), lq_sync(&rt)));
     ck128("ppacw", out, e);
     end();
@@ -1120,17 +1295,23 @@ static void t_plzcw(void)
 
 static void t_pex(void)
 {
-    static const uint16_t h[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+    static const uint16_t h[8] = {0, 1, 2, 3, 4, 5, 6, 7};
     U128 rt = from_u16(h), e, out;
     int i;
 
     begin("pexeh/pexch/pexew/pexcw");
 
-    { uint16_t x[8] = { 2, 1, 0, 3, 6, 5, 4, 7 }; for (i = 0; i < 8; i++) e.h[i] = x[i]; }
+    {
+        uint16_t x[8] = {2, 1, 0, 3, 6, 5, 4, 7};
+        for (i = 0; i < 8; i++) e.h[i] = x[i];
+    }
     __mmi_sq(&out, __mmi_pexeh(lq_sync(&rt)));
     ck128("pexeh", out, e);
 
-    { uint16_t x[8] = { 0, 2, 1, 3, 4, 6, 5, 7 }; for (i = 0; i < 8; i++) e.h[i] = x[i]; }
+    {
+        uint16_t x[8] = {0, 2, 1, 3, 4, 6, 5, 7};
+        for (i = 0; i < 8; i++) e.h[i] = x[i];
+    }
     __mmi_sq(&out, __mmi_pexch(lq_sync(&rt)));
     ck128("pexch", out, e);
 
@@ -1152,9 +1333,15 @@ static void t_pinteh_pcpyh_padsbh(void)
 
     begin("pinteh/pcpyh/padsbh");
 
-    for (i = 0; i < 8; i++) { rs.h[i] = (uint16_t)(0x10 + i); rt.h[i] = (uint16_t)(0x20 + i); }
-    { uint16_t x[8] = { rt.h[0], rs.h[0], rt.h[2], rs.h[2], rt.h[4], rs.h[4], rt.h[6], rs.h[6] };
-      for (i = 0; i < 8; i++) e.h[i] = x[i]; }
+    for (i = 0; i < 8; i++)
+    {
+        rs.h[i] = (uint16_t)(0x10 + i);
+        rt.h[i] = (uint16_t)(0x20 + i);
+    }
+    {
+        uint16_t x[8] = {rt.h[0], rs.h[0], rt.h[2], rs.h[2], rt.h[4], rs.h[4], rt.h[6], rs.h[6]};
+        for (i = 0; i < 8; i++) e.h[i] = x[i];
+    }
     __mmi_sq(&out, __mmi_pinteh(lq_sync(&rs), lq_sync(&rt)));
     ck128("pinteh", out, e);
 
@@ -1163,11 +1350,14 @@ static void t_pinteh_pcpyh_padsbh(void)
     __mmi_sq(&out, __mmi_pcpyh(lq_sync(&rt)));
     ck128("pcpyh", out, e);
 
-    { static const int16_t a[8] = { 5, -1, 100, 0, 7, 8, 9, -4 };
-      static const int16_t b[8] = { 2, 3, -10, 1, 1, -2, 3, 6 };
-      rs = from_h(a); rt = from_h(b);
-      for (i = 0; i < 4; i++) e.shv[i] = (int16_t)(a[i] - b[i]);
-      for (i = 4; i < 8; i++) e.shv[i] = (int16_t)(a[i] + b[i]); }
+    {
+        static const int16_t a[8] = {5, -1, 100, 0, 7, 8, 9, -4};
+        static const int16_t b[8] = {2, 3, -10, 1, 1, -2, 3, 6};
+        rs = from_h(a);
+        rt = from_h(b);
+        for (i = 0; i < 4; i++) e.shv[i] = (int16_t)(a[i] - b[i]);
+        for (i = 4; i < 8; i++) e.shv[i] = (int16_t)(a[i] + b[i]);
+    }
     __mmi_sq(&out, (uint32x4_t)__mmi_padsbh((int16x8_t)lq_sync(&rs), (int16x8_t)lq_sync(&rt)));
     ck128("padsbh", out, e);
     end();
@@ -1185,8 +1375,14 @@ static void t_pmfhl(void)
     set_acc_mem(&lo, &hi);
 
     /* even halfword of every word: LO first, then HI, per 64-bit half */
-    e.h[0] = 1; e.h[1] = 2; e.h[2] = 5; e.h[3] = 6;
-    e.h[4] = 3; e.h[5] = 4; e.h[6] = 7; e.h[7] = 8;
+    e.h[0] = 1;
+    e.h[1] = 2;
+    e.h[2] = 5;
+    e.h[3] = 6;
+    e.h[4] = 3;
+    e.h[5] = 4;
+    e.h[6] = 7;
+    e.h[7] = 8;
     __mmi_sq(&out, __mmi_pmfhl_lh());
     ck128("pmfhl.lh", out, e);
 
@@ -1195,8 +1391,14 @@ static void t_pmfhl(void)
     ck128("pmfhl.lw", out, e);
 
     /* .sh uses the same lanes as .lh; these values do not saturate */
-    e.h[0] = 1; e.h[1] = 2; e.h[2] = 5; e.h[3] = 6;
-    e.h[4] = 3; e.h[5] = 4; e.h[6] = 7; e.h[7] = 8;
+    e.h[0] = 1;
+    e.h[1] = 2;
+    e.h[2] = 5;
+    e.h[3] = 6;
+    e.h[4] = 3;
+    e.h[5] = 4;
+    e.h[6] = 7;
+    e.h[7] = 8;
     __mmi_sq(&out, __mmi_pmfhl_sh());
     ck128("pmfhl.sh", out, e);
 

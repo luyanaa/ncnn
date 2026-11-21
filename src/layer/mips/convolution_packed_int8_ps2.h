@@ -28,9 +28,16 @@
 static bool convolution_packed_int8_ps2(const Mat& bottom_blob, Mat& top_blob, const Mat& weight_data_tm, int kernel_w, int kernel_h, int dilation_w, int dilation_h, int stride_w, int stride_h, const Option& opt)
 {
 #if !defined(NCNN_PS2_INT8_MMI)
-    (void)bottom_blob; (void)top_blob; (void)weight_data_tm;
-    (void)kernel_w; (void)kernel_h; (void)dilation_w; (void)dilation_h;
-    (void)stride_w; (void)stride_h; (void)opt;
+    (void)bottom_blob;
+    (void)top_blob;
+    (void)weight_data_tm;
+    (void)kernel_w;
+    (void)kernel_h;
+    (void)dilation_w;
+    (void)dilation_h;
+    (void)stride_w;
+    (void)stride_h;
+    (void)opt;
     return false;
 #else
     if (bottom_blob.elempack != 1 || top_blob.elempack != 1)
@@ -133,7 +140,7 @@ static bool convolution_packed_int8_ps2(const Mat& bottom_blob, Mat& top_blob, c
                             "paddw %1, $13, $14\n\t"
                             : "=&r"(d0), "=&r"(d1)
                             : "m"(*(const int*)sbase), "m"(*(const int*)kptr),
-                              "r"(sbase), "r"(sbase + N), "r"(space_ofs[k]), "r"(w), "r"(kptr)
+                            "r"(sbase), "r"(sbase + N), "r"(space_ofs[k]), "r"(w), "r"(kptr)
                             : "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$hi", "$lo", "memory");
 
                         // paddw summed both halves, so each word holds the
@@ -160,6 +167,9 @@ static bool convolution_packed_int8_ps2(const Mat& bottom_blob, Mat& top_blob, c
 
 #else
 
-static bool convolution_packed_int8_ps2(const Mat&, Mat&, const Mat&, int, int, int, int, int, int, const Option&) { return false; }
+static bool convolution_packed_int8_ps2(const Mat&, Mat&, const Mat&, int, int, int, int, int, int, const Option&)
+{
+    return false;
+}
 
 #endif

@@ -35,7 +35,7 @@ int ps2_vu1_gemm_init(void);
  * A: 4*K floats (zero-padded internally to a multiple of 4 in K).
  * B: K*4 floats.  C: 16 floats.  K in 1..256.
  * Returns 0 on success, negative on error. */
-int ps2_vu1_gemm_4xKx4(const float *A, const float *B, float *C, int K);
+int ps2_vu1_gemm_4xKx4(const float* A, const float* B, float* C, int K);
 
 /* Releases the DMA packet buffer (microcode stays in VU1). */
 void ps2_vu1_gemm_shutdown(void);

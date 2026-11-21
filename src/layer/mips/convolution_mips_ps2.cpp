@@ -8,8 +8,6 @@
 
 #include "convolution_mips_ps2_kernel.h"
 
-
-
 #include "fused_activation.h"
 
 namespace ncnn {
@@ -196,8 +194,6 @@ int Convolution_mips_ps2::forward(const Mat& bottom_blob, Mat& top_blob, const O
     if (weight_data_ps2.empty() && weight_data_ps2_wst.empty())
         return Convolution_mips::forward(bottom_blob, top_blob, opt);
 
-
-
     const bool wst = !weight_data_ps2_wst.empty();
 
     // From here on weight_data has been released in create_pipeline, so this
@@ -375,11 +371,11 @@ int Convolution_mips_ps2::forward(const Mat& bottom_blob, Mat& top_blob, const O
         const float* biasptr = bias_term ? (const float*)bias_data : (const float*)0;
 
         convolution_ps2_wst((const float*)bottom_blob_bordered, (int)bottom_blob_bordered.cstep,
-                             (float*)top_blob, (int)top_blob.cstep,
-                             weight_data_ps2_wst, biasptr,
-                             inch, outch, maxk, outw, outh, bw, stride_h,
-                             space_ofs, false,
-                             activation_type, activation_params);
+                            (float*)top_blob, (int)top_blob.cstep,
+                            weight_data_ps2_wst, biasptr,
+                            inch, outch, maxk, outw, outh, bw, stride_h,
+                            space_ofs, false,
+                            activation_type, activation_params);
 
         return 0;
     }
