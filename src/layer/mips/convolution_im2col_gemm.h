@@ -2453,6 +2453,8 @@ static void convolution_im2col_gemm_transform_kernel(const Mat& kernel, Mat& AT,
         Mat weight_data_r2 = kernel.reshape(maxk, inch, outch);
 
         A_data.create(maxk * inch, outch);
+        if (A_data.empty())
+            return;
 
         for (int q = 0; q < outch; q += 1)
         {
@@ -2474,6 +2476,8 @@ static void convolution_im2col_gemm_transform_kernel(const Mat& kernel, Mat& AT,
     }
 
     AT.create(TILE_K * TILE_M, (K + TILE_K - 1) / TILE_K, (M + TILE_M - 1) / TILE_M);
+    if (AT.empty())
+        return;
 
     #pragma omp parallel for num_threads(opt.num_threads)
     for (int ppj = 0; ppj < nn_M; ppj++)

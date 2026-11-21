@@ -10,7 +10,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
-#if defined __ANDROID__ || defined __linux__
+#if (defined __ANDROID__ || defined __linux__) && !defined(__PSP__)
 #include <sched.h> // cpu_set_t
 #endif
 
@@ -32,7 +32,7 @@ public:
 #if defined _WIN32
     ULONG_PTR mask;
 #endif
-#if defined __ANDROID__ || defined __linux__
+#if (defined __ANDROID__ || defined __linux__) && !defined(__PSP__)
     cpu_set_t cpu_set;
 #endif
 #if __APPLE__

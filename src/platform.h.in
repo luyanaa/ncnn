@@ -56,6 +56,8 @@
 #cmakedefine01 NCNN_LSX
 #cmakedefine01 NCNN_LASX
 #cmakedefine01 NCNN_MMI
+#cmakedefine01 NCNN_PS2_MMI
+#cmakedefine01 NCNN_PSP_VFPU
 #cmakedefine01 NCNN_RVV
 #cmakedefine01 NCNN_ZFH
 #cmakedefine01 NCNN_ZVFH

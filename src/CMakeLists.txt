@@ -692,6 +692,12 @@ if(NCNN_TARGET_ARCH STREQUAL "mips")
     endif()
 endif()
 
+if(NCNN_TARGET_ARCH STREQUAL "mips" AND NCNN_PS2_MMI)
+    # r5900 target is provided by the toolchain (-march=r5900); no extra -m flag needed.
+    # keep the r5900 errata workaround enabled in case a toolchain turns it off
+    target_compile_options(ncnn PRIVATE -mfix-r5900)
+endif()
+
 if(NCNN_TARGET_ARCH STREQUAL "loongarch")
     if(NOT NCNN_RUNTIME_CPU AND NCNN_LSX)
         target_compile_options(ncnn PRIVATE -mlsx)

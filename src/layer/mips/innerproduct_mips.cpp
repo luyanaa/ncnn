@@ -13,6 +13,10 @@
 #include "mips_activation.h"
 #include "mips_usability.h"
 
+#if NCNN_PSP_VFPU
+#include "psp_vfpu.h"
+#endif
+
 namespace ncnn {
 
 #if NCNN_BF16
@@ -357,6 +361,12 @@ int InnerProduct_mips::forward(const Mat& bottom_blob, Mat& top_blob, const Opti
                         kptr += 4;
                     }
                     sum += __msa_reduce_fadd_w(_sum);
+#elif NCNN_PSP_VFPU
+                    // elempack 1 keeps the weight and the row contiguous, so the
+                    // whole dot is one vdot.q reduction. The packed layouts above
+                    // stay on MSA; the VFPU has no integer lane ops for them.
+                    PSP_VFPU_DOT(m, kptr, num_input, &sum);
+                    i = num_input;
 #endif // __mips_msa
                     for (; i < num_input; i++)
                     {
@@ -585,6 +595,9 @@ int InnerProduct_mips::forward(const Mat& bottom_blob, Mat& top_blob, const Opti
                 w += 4;
             }
             sum += __msa_reduce_fadd_w(_sum0);
+#elif NCNN_PSP_VFPU
+            PSP_VFPU_DOT(m, w, num_input, &sum);
+            i = num_input;
 #endif // __mips_msa
             for (; i < num_input; i++)
             {

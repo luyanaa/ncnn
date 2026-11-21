@@ -41,7 +41,18 @@
 #include <windows.h>
 #endif
 
-#if defined __ANDROID__ || defined __OHOS__ || __linux__
+// The PSP toolchain defines __linux__, but the console has none of the Linux
+// interfaces the probes below use: no /proc, no /sys, no sched_setaffinity and a
+// sysconf that returns 0 for the cache-size parameters. A zero L2 size makes
+// every convolution prefer the sgemm path, so the dedicated kernels are never
+// reached. Treat PSP as the generic single-core fallback instead.
+#if (defined __ANDROID__ || defined __linux__) && !defined(__PSP__)
+#define NCNN_CPU_HOST_LINUX 1
+#else
+#define NCNN_CPU_HOST_LINUX 0
+#endif
+
+#if defined __ANDROID__ || defined __OHOS__ || NCNN_CPU_HOST_LINUX
 #if defined __ANDROID__
 #if __ANDROID_API__ >= 18
 #include <sys/auxv.h> // getauxval()
@@ -161,7 +172,7 @@
 #include <immintrin.h>
 #endif
 
-#if (defined _WIN32 && (__aarch64__ || __arm__)) || ((defined __ANDROID__ || defined __linux__) && __riscv)
+#if (defined _WIN32 && (__aarch64__ || __arm__)) || (NCNN_CPU_HOST_LINUX && __riscv)
 #define RUAPU_IMPLEMENTATION
 #include "ruapu.h"
 #endif
@@ -229,7 +240,7 @@ static int g_cpu_support_arm_edsp;
 static int g_cpu_support_arm_neon;
 static int g_cpu_support_arm_vfpv4;
 #endif // __aarch64__ || __arm__
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 static unsigned int g_hwcaps;
 static unsigned int g_hwcaps2;
 #elif __APPLE__
@@ -262,7 +273,7 @@ static int g_cpu_support_x86_avx512_bf16;
 static int g_cpu_support_x86_avx512_fp16;
 #endif // defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
 
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 #if __riscv
 static int g_cpu_support_riscv_zfh;
 static int g_cpu_support_riscv_zvfh;
@@ -270,23 +281,23 @@ static int g_cpu_support_riscv_zvfbfmin;
 static int g_cpu_support_riscv_zvfbfwma;
 static int g_cpu_support_riscv_xtheadvector;
 #endif // __riscv
-#endif // defined __ANDROID__ || defined __linux__
+#endif // defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 
 static int g_cpu_level2_cachesize;
 static int g_cpu_level3_cachesize;
 
 // misc info
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 #if __aarch64__
 static int g_cpu_is_arm_a53_a55;
 #endif // __aarch64__
-#endif // defined __ANDROID__ || defined __linux__
+#endif // defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 
 static bool is_being_debugged()
 {
 #if defined _WIN32
     return IsDebuggerPresent();
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     // https://stackoverflow.com/questions/3596781/how-to-detect-if-the-current-process-is-being-run-by-gdb
     int status_fd = open("/proc/self/status", O_RDONLY);
     if (status_fd == -1)
@@ -336,7 +347,7 @@ static bool is_being_debugged()
 #endif
 }
 
-#if defined __ANDROID__ || defined __OHOS__ || defined __linux__
+#if defined __ANDROID__ || defined __OHOS__ || NCNN_CPU_HOST_LINUX
 
 #define AT_HWCAP  16
 #define AT_HWCAP2 26
@@ -509,7 +520,7 @@ static unsigned int get_elf_hwcap(unsigned int type)
 
     return hwcap;
 }
-#endif // defined __ANDROID__ || defined __OHOS__ || defined __linux__
+#endif // defined __ANDROID__ || defined __OHOS__ || NCNN_CPU_HOST_LINUX
 
 #if __APPLE__
 static unsigned int get_hw_cpufamily()
@@ -927,7 +938,7 @@ static int get_cpucount()
     SYSTEM_INFO system_info;
     GetSystemInfo(&system_info);
     count = system_info.dwNumberOfProcessors;
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     // get cpu count from /proc/cpuinfo
     FILE* fp = fopen("/proc/cpuinfo", "rb");
     if (!fp)
@@ -964,7 +975,7 @@ static int get_cpucount()
     return count;
 }
 
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 static int get_thread_siblings(int cpuid)
 {
     char path[256];
@@ -1031,7 +1042,7 @@ static int get_thread_siblings(int cpuid)
 
     return -1;
 }
-#endif // defined __ANDROID__ || defined __linux__
+#endif // defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 
 static int get_physical_cpucount()
 {
@@ -1065,7 +1076,7 @@ static int get_physical_cpucount()
     }
 
     free(buffer);
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     std::vector<int> thread_set;
     for (int i = 0; i < g_cpucount; i++)
     {
@@ -1106,7 +1117,7 @@ static int get_physical_cpucount()
     return count;
 }
 
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 static int get_data_cache_size(int cpuid, int level)
 {
     char path[256];
@@ -1274,7 +1285,7 @@ static int get_big_cpu_data_cache_size(int level)
     // should never reach here, fallback to cpu0
     return get_data_cache_size(0, level);
 }
-#endif // defined __ANDROID__ || defined __linux__
+#endif // defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 
 static int get_cpu_level2_cachesize()
 {
@@ -1309,7 +1320,7 @@ static int get_cpu_level2_cachesize()
 
         free(buffer);
     }
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     size = get_big_cpu_data_cache_size(2);
 #if defined(_SC_LEVEL2_CACHE_SIZE)
     if (size <= 0)
@@ -1379,7 +1390,7 @@ static int get_cpu_level3_cachesize()
 
         free(buffer);
     }
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     size = get_big_cpu_data_cache_size(3);
 #if defined(_SC_LEVEL3_CACHE_SIZE)
     if (size <= 0)
@@ -1492,7 +1503,7 @@ static int set_sched_affinity(const ncnn::CpuSet& thread_affinity_mask)
 }
 #endif // defined _WIN32
 
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 static int get_max_freq_khz(int cpuid)
 {
     // first try, for all possible cpu
@@ -1618,7 +1629,7 @@ static int set_sched_affinity(const ncnn::CpuSet& thread_affinity_mask)
 
     return 0;
 }
-#endif // defined __ANDROID__ || defined __linux__
+#endif // defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 
 #if __APPLE__
 static int set_sched_affinity(const ncnn::CpuSet& thread_affinity_mask)
@@ -1805,7 +1816,7 @@ static void initialize_cpu_thread_affinity_mask(ncnn::CpuSet& mask_all, ncnn::Cp
                 mask_big.enable(i);
         }
     }
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     int max_freq_khz_min = INT_MAX;
     int max_freq_khz_max = 0;
     std::vector<int> cpu_max_freq_khz(g_cpucount);
@@ -1873,7 +1884,7 @@ static void initialize_cpu_thread_affinity_mask(ncnn::CpuSet& mask_all, ncnn::Cp
 #endif
 }
 
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 #if __aarch64__
 union midr_info_t
 {
@@ -2186,7 +2197,7 @@ static int detect_cpu_is_arm_a53_a55()
     return 2;
 }
 #endif // __aarch64__
-#endif // defined __ANDROID__ || defined __linux__
+#endif // defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 
 // the initialization
 static void initialize_global_cpu_info()
@@ -2200,7 +2211,7 @@ static void initialize_global_cpu_info()
     g_powersave = 0;
     initialize_cpu_thread_affinity_mask(g_cpu_affinity_mask_all, g_cpu_affinity_mask_little, g_cpu_affinity_mask_big);
 
-#if (defined _WIN32 && (__aarch64__ || __arm__)) || ((defined __ANDROID__ || defined __linux__) && __riscv)
+#if (defined _WIN32 && (__aarch64__ || __arm__)) || ((defined __ANDROID__ || NCNN_CPU_HOST_LINUX) && __riscv)
     if (!is_being_debugged())
     {
         ruapu_init();
@@ -2225,7 +2236,7 @@ static void initialize_global_cpu_info()
     g_cpu_support_arm_neon = 1; // all modern windows arm devices have neon
     g_cpu_support_arm_vfpv4 = ruapu_supports("vfpv4");
 #endif // __aarch64__ || __arm__
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     g_hwcaps = get_elf_hwcap(AT_HWCAP);
     g_hwcaps2 = get_elf_hwcap(AT_HWCAP2);
 #elif __APPLE__
@@ -2290,7 +2301,7 @@ static void initialize_global_cpu_info()
     g_cpu_support_x86_avx512_fp16 = get_cpu_support_x86_avx512_fp16();
 #endif // defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
 
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 #if __riscv
     g_cpu_support_riscv_zfh = ruapu_supports("zfh") || ruapu_supports("xtheadvector");   // xtheadvector implies zfh
     g_cpu_support_riscv_zvfh = ruapu_supports("zvfh") || ruapu_supports("xtheadvector"); // xtheadvector implies zvfh
@@ -2298,16 +2309,16 @@ static void initialize_global_cpu_info()
     g_cpu_support_riscv_zvfbfwma = ruapu_supports("zvfbfwma");
     g_cpu_support_riscv_xtheadvector = ruapu_supports("xtheadvector");
 #endif // __riscv
-#endif // defined __ANDROID__ || defined __linux__
+#endif // defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 
     g_cpu_level2_cachesize = get_cpu_level2_cachesize();
     g_cpu_level3_cachesize = get_cpu_level3_cachesize();
 
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 #if __aarch64__
     g_cpu_is_arm_a53_a55 = detect_cpu_is_arm_a53_a55();
 #endif // __aarch64__
-#endif // defined __ANDROID__ || defined __linux__
+#endif // defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 }
 
 static int g_cpu_info_initialized = 0;
@@ -2360,7 +2371,7 @@ int CpuSet::num_enabled() const
 
     return num_enabled;
 }
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 CpuSet::CpuSet()
 {
     disable_all();
@@ -2468,7 +2479,7 @@ int cpu_support_arm_edsp()
 #if __arm__ && !__aarch64__
 #if defined _WIN32
     return g_cpu_support_arm_edsp;
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     return g_hwcaps & HWCAP_EDSP;
 #elif __APPLE__
     return g_hw_cputype == CPU_TYPE_ARM;
@@ -2488,7 +2499,7 @@ int cpu_support_arm_neon()
 #elif __arm__
 #if defined _WIN32
     return g_cpu_support_arm_neon;
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     return g_hwcaps & HWCAP_NEON;
 #elif __APPLE__
     return g_hw_cputype == CPU_TYPE_ARM && g_hw_cpusubtype > CPU_SUBTYPE_ARM_V7;
@@ -2508,7 +2519,7 @@ int cpu_support_arm_vfpv4()
 #elif __arm__
 #if defined _WIN32
     return g_cpu_support_arm_vfpv4;
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     return g_hwcaps & HWCAP_VFPv4;
 #elif __APPLE__
     return g_hw_cputype == CPU_TYPE_ARM && g_hw_cpusubtype > CPU_SUBTYPE_ARM_V7S;
@@ -2526,7 +2537,7 @@ int cpu_support_arm_asimdhp()
 #if __aarch64__
 #if defined _WIN32
     return g_cpu_support_arm_asimdhp;
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     return g_hwcaps & HWCAP_ASIMDHP;
 #elif __APPLE__
     return g_hw_optional_arm_FEAT_FP16;
@@ -2544,7 +2555,7 @@ int cpu_support_arm_cpuid()
 #if __aarch64__
 #if defined _WIN32
     return g_cpu_support_arm_cpuid;
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     return g_hwcaps & HWCAP_CPUID;
 #elif __APPLE__
     return 0;
@@ -2562,7 +2573,7 @@ int cpu_support_arm_asimddp()
 #if __aarch64__
 #if defined _WIN32
     return g_cpu_support_arm_asimddp;
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     return g_hwcaps & HWCAP_ASIMDDP;
 #elif __APPLE__
     return g_hw_optional_arm_FEAT_DotProd;
@@ -2580,7 +2591,7 @@ int cpu_support_arm_asimdfhm()
 #if __aarch64__
 #if defined _WIN32
     return g_cpu_support_arm_asimdfhm;
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     return g_hwcaps & HWCAP_ASIMDFHM;
 #elif __APPLE__
     return g_hw_optional_arm_FEAT_FHM;
@@ -2598,7 +2609,7 @@ int cpu_support_arm_bf16()
 #if __aarch64__
 #if defined _WIN32
     return g_cpu_support_arm_bf16;
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     return g_hwcaps2 & HWCAP2_BF16;
 #elif __APPLE__
     return g_hw_optional_arm_FEAT_BF16;
@@ -2616,7 +2627,7 @@ int cpu_support_arm_i8mm()
 #if __aarch64__
 #if defined _WIN32
     return g_cpu_support_arm_i8mm;
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     return g_hwcaps2 & HWCAP2_I8MM;
 #elif __APPLE__
     return g_hw_optional_arm_FEAT_I8MM;
@@ -2634,7 +2645,7 @@ int cpu_support_arm_sve()
 #if __aarch64__
 #if defined _WIN32
     return g_cpu_support_arm_sve;
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     return g_hwcaps & HWCAP_SVE;
 #elif __APPLE__
     return 0; // no known apple cpu support armv8.6 sve
@@ -2652,7 +2663,7 @@ int cpu_support_arm_sve2()
 #if __aarch64__
 #if defined _WIN32
     return g_cpu_support_arm_sve2;
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     return g_hwcaps2 & HWCAP2_SVE2;
 #elif __APPLE__
     return 0; // no known apple cpu support armv8.6 sve2
@@ -2670,7 +2681,7 @@ int cpu_support_arm_svebf16()
 #if __aarch64__
 #if defined _WIN32
     return g_cpu_support_arm_svebf16;
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     return g_hwcaps2 & HWCAP2_SVEBF16;
 #elif __APPLE__
     return 0; // no known apple cpu support armv8.6 svebf16
@@ -2688,7 +2699,7 @@ int cpu_support_arm_svei8mm()
 #if __aarch64__
 #if defined _WIN32
     return g_cpu_support_arm_svei8mm;
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     return g_hwcaps2 & HWCAP2_SVEI8MM;
 #elif __APPLE__
     return 0; // no known apple cpu support armv8.6 svei8mm
@@ -2706,7 +2717,7 @@ int cpu_support_arm_svef32mm()
 #if __aarch64__
 #if defined _WIN32
     return g_cpu_support_arm_svef32mm;
-#elif defined __ANDROID__ || defined __linux__
+#elif defined __ANDROID__ || NCNN_CPU_HOST_LINUX
     return g_hwcaps2 & HWCAP2_SVEF32MM;
 #elif __APPLE__
     return 0; // no known apple cpu support armv8.6 svef32mm
@@ -2861,7 +2872,7 @@ int cpu_support_x86_avx512_fp16()
 int cpu_support_mips_msa()
 {
     try_initialize_global_cpu_info();
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 #if __mips__
     return g_hwcaps & HWCAP_MIPS_MSA;
 #else
@@ -2875,7 +2886,7 @@ int cpu_support_mips_msa()
 int cpu_support_loongarch_lsx()
 {
     try_initialize_global_cpu_info();
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 #if __loongarch64
     return g_hwcaps & HWCAP_LOONGARCH_LSX;
 #else
@@ -2889,7 +2900,7 @@ int cpu_support_loongarch_lsx()
 int cpu_support_loongarch_lasx()
 {
     try_initialize_global_cpu_info();
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 #if __loongarch64
     return g_hwcaps & HWCAP_LOONGARCH_LASX;
 #else
@@ -2903,7 +2914,7 @@ int cpu_support_loongarch_lasx()
 int cpu_support_loongson_mmi()
 {
     try_initialize_global_cpu_info();
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 #if __mips__
     return g_hwcaps & HWCAP_LOONGSON_MMI;
 #else
@@ -2917,7 +2928,7 @@ int cpu_support_loongson_mmi()
 int cpu_support_riscv_v()
 {
     try_initialize_global_cpu_info();
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 #if __riscv
     return g_hwcaps & COMPAT_HWCAP_ISA_V;
 #else
@@ -2931,7 +2942,7 @@ int cpu_support_riscv_v()
 int cpu_support_riscv_zfh()
 {
     try_initialize_global_cpu_info();
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 #if __riscv
     return g_cpu_support_riscv_zfh;
 #else
@@ -2945,7 +2956,7 @@ int cpu_support_riscv_zfh()
 int cpu_support_riscv_zvfh()
 {
     try_initialize_global_cpu_info();
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 #if __riscv
     return g_cpu_support_riscv_zvfh;
 #else
@@ -2959,7 +2970,7 @@ int cpu_support_riscv_zvfh()
 int cpu_support_riscv_zvfbfmin()
 {
     try_initialize_global_cpu_info();
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 #if __riscv
     return g_cpu_support_riscv_zvfbfmin;
 #else
@@ -2973,7 +2984,7 @@ int cpu_support_riscv_zvfbfmin()
 int cpu_support_riscv_zvfbfwma()
 {
     try_initialize_global_cpu_info();
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 #if __riscv
     return g_cpu_support_riscv_zvfbfwma;
 #else
@@ -2987,7 +2998,7 @@ int cpu_support_riscv_zvfbfwma()
 int cpu_support_riscv_xtheadvector()
 {
     try_initialize_global_cpu_info();
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 #if __riscv
     return g_cpu_support_riscv_xtheadvector;
 #else
@@ -3124,7 +3135,7 @@ const CpuSet& get_cpu_thread_affinity_mask(int powersave)
 int set_cpu_thread_affinity(const CpuSet& thread_affinity_mask)
 {
     try_initialize_global_cpu_info();
-#if defined __ANDROID__ || defined __linux__ || defined _WIN32
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX || defined _WIN32
 #ifdef _OPENMP
     int num_threads = thread_affinity_mask.num_enabled();
 
@@ -3206,7 +3217,7 @@ int set_cpu_thread_affinity(const CpuSet& thread_affinity_mask)
 int is_current_thread_running_on_a53_a55()
 {
     try_initialize_global_cpu_info();
-#if defined __ANDROID__ || defined __linux__
+#if defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 #if __aarch64__
     if (g_cpu_is_arm_a53_a55 == 0)
         return 0; // all non a53/a55
@@ -3256,7 +3267,7 @@ int is_current_thread_running_on_a53_a55()
 #endif // __aarch64__
 #else
     return 0;
-#endif // defined __ANDROID__ || defined __linux__
+#endif // defined __ANDROID__ || NCNN_CPU_HOST_LINUX
 }
 
 int get_omp_num_threads()

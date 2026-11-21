@@ -41,6 +41,13 @@ static void convolution_transform_kernel_packed(const Mat& kernel, Mat& kernel_t
             kernel_tm.create(4 * maxk, inch / 4 + (inch % 4) / 2 + inch % 2, outch);
         else
 #endif // __mips_msa
+#if NCNN_PSP_VFPU
+        // group the input channels by four so the remainder kernel below can
+        // load a whole quad with lv.q. The tail channels stay packed by two.
+        if (inch >= 4)
+            kernel_tm.create(4 * maxk, inch / 4 + (inch % 4) / 2 + inch % 2, outch);
+        else
+#endif // NCNN_PSP_VFPU
         if (inch >= 2)
             kernel_tm.create(2 * maxk, inch / 2 + inch % 2, outch);
         else
@@ -215,7 +222,7 @@ static void convolution_transform_kernel_packed(const Mat& kernel, Mat& kernel_t
 #endif
 
         int p = 0;
-#if __mips_msa
+#if __mips_msa || NCNN_PSP_VFPU
         for (; p + 3 < inch; p += 4)
         {
             for (int k = 0; k < maxk; k++)
@@ -232,7 +239,7 @@ static void convolution_transform_kernel_packed(const Mat& kernel, Mat& kernel_t
 
             kptr += maxk * 4;
         }
-#endif // __mips_msa
+#endif // __mips_msa || NCNN_PSP_VFPU
         for (; p + 1 < inch; p += 2)
         {
             for (int k = 0; k < maxk; k++)
@@ -595,7 +602,7 @@ static void convolution_packed(const Mat& bottom_blob, Mat& top_blob, const Mat&
                     sum = bias_data_ptr[p];
                 }
 
-#if __mips_msa
+#if __mips_msa || NCNN_PSP_VFPU
                 const float* kptr = weight_data_tm.channel(p / 4 + (p % 4) / 2 + p % 2);
 #else
                 const float* kptr = weight_data_tm.channel(p / 2 + p % 2);
@@ -640,6 +647,23 @@ static void convolution_packed(const Mat& bottom_blob, Mat& top_blob, const Mat&
                     }
                 }
                 sum += __msa_reduce_fadd_w(_sum);
+#elif NCNN_PSP_VFPU
+                // the kernel was grouped by four input channels above, and each
+                // group is contiguous per tap, so one output is a plain dot.
+                // elempack is 1 here: packing is an MSA layout the VFPU cannot use.
+                for (; q + 3 < inch; q += 4)
+                {
+                    const float* r0 = bottom_blob.channel(q).row(i * stride_h) + j * stride_w;
+
+                    for (int k = 0; k < maxk; k++)
+                    {
+                        const int sok = space_ofs[k];
+                        const float r4[4] __attribute__((aligned(16))) = {r0[sok], r0[sok + N], r0[sok + N * 2], r0[sok + N * 3]};
+
+                        PSP_VFPU_DOT(r4, kptr, 4, &sum);
+                        kptr += 4;
+                    }
+                }
 #endif // __mips_msa
                 for (; q + 1 < inch; q += 2)
                 {

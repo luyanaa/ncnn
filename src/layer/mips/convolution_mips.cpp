@@ -19,6 +19,10 @@
 #include "mips_activation.h"
 #include "mips_usability.h"
 
+#if NCNN_PSP_VFPU
+#include "psp_vfpu.h"
+#endif
+
 #include "cpu.h"
 
 namespace ncnn {
@@ -35,6 +39,7 @@ namespace ncnn {
 
 #if NCNN_INT8
 #include "convolution_packed_int8.h"
+#include "convolution_packed_int8_ps2.h"
 #include "convolution_im2col_gemm_int8.h"
 #include "convolution_3x3_winograd_int8.h"
 #endif // NCNN_INT8
@@ -339,6 +344,8 @@ int Convolution_mips::create_pipeline(const Option& opt)
     if ((opt.use_sgemm_convolution && prefer_sgemm) || (kernel_w == 1 && kernel_h == 1))
     {
         convolution_im2col_gemm_transform_kernel(weight_data, weight_sgemm_data, num_input, num_output, kernel_w, kernel_h, opt);
+        if (weight_sgemm_data.empty())
+            return -100;
 
         if (opt.lightmode)
             weight_data.release();
@@ -865,7 +872,11 @@ int Convolution_mips::forward_int8_mips(const Mat& bottom_blob, Mat& top_blob, c
     }
     else
     {
-        convolution_packed_int8(bottom_blob_bordered, top_blob_int32, weight_data_tm, kernel_w, kernel_h, dilation_w, dilation_h, stride_w, stride_h, opt);
+        // the EE MMI kernel only handles elempack == 1 with both channel
+        // counts a multiple of 8, and only when NCNN_PS2_INT8_MMI is set; it
+        // reports anything else back so the scalar kernel still runs it
+        if (!convolution_packed_int8_ps2(bottom_blob_bordered, top_blob_int32, weight_data_tm, kernel_w, kernel_h, dilation_w, dilation_h, stride_w, stride_h, opt))
+            convolution_packed_int8(bottom_blob_bordered, top_blob_int32, weight_data_tm, kernel_w, kernel_h, dilation_w, dilation_h, stride_w, stride_h, opt);
     }
 
 #if __mips_msa

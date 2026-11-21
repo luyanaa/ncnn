@@ -6,6 +6,10 @@
 #include <float.h>
 #include <limits.h>
 
+#if NCNN_PSP_VFPU
+#include "mips/psp_vfpu.h"
+#endif
+
 namespace ncnn {
 
 int Gemm::get_weight_block_quantize_params(int& weight_bits, int& block_size, bool& has_input_scale) const
@@ -482,10 +486,16 @@ static void gemm_transB(const Mat& A, const Mat& BT, const Mat& C, Mat& top_blob
                 sum *= beta;
             }
 
+            // fp32 dot of the K axis. The VFPU does it four wide with vdot.q;
+            // every other target keeps the scalar loop, which is also the tail.
+#if NCNN_PSP_VFPU
+            PSP_VFPU_DOT(ptrA, ptrBT, K, &sum);
+#else
             for (int k = 0; k < K; k++)
             {
                 sum += ptrA[k] * ptrBT[k];
             }
+#endif
 
             sum *= alpha;
 

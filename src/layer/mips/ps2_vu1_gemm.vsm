@@ -1,0 +1,52 @@
+; ps2_vu1_gemm.vsm - VU1 microprogram: 4xK * Kx4 -> 4x4 fp32 GEMM
+;
+; VU1 data memory layout (qword = 16 bytes):
+;   qword 0      .. K-1     : A transposed; qword k = {A[0][k], A[1][k], A[2][k], A[3][k]}
+;                               (K is zero-padded by the EE driver to a multiple of 4)
+;   qword 256    .. 256+K-1 : B rows; qword k = {B[k][0], B[k][1], B[k][2], B[k][3]}
+;   qword 512    .. 515     : C output; qword 512+i holds C[i][0..3]
+;   qword 1023              : header; word 3 (w lane) = K (plain integer)
+;
+; Requires 1 <= K <= 256.
+;
+; dvp-as pairing: the FIRST instruction on a line is the upper-slot
+; instruction, the SECOND is the lower-slot instruction.
+;
+; Register usage:
+;   VI02 = A qword cursor (k), VI03 = B qword cursor (256 + k), VI06 = K
+;   VF04 = A column k (lane i = A[i][k]), VF05 = B row k, VF06 = product row
+;   VF08..VF11 = accumulators for C rows 0..3
+		.vu
+		.align 4
+		.global	VU1Gemm_CodeStart
+		.global	VU1Gemm_CodeEnd
+VU1Gemm_CodeStart:
+		nop		ilw.w		VI06, 1023(VI00)
+		nop		iaddiu		VI03, VI00, 0x0100
+		nop		iaddi		VI02, VI00, 0
+		sub.xyzw	VF08, VF00, VF00	nop
+		sub.xyzw	VF09, VF00, VF00	nop
+		sub.xyzw	VF10, VF00, VF00	nop
+		sub.xyzw	VF11, VF00, VF00	nop
+VU1Gemm_Loop:
+		nop		lq		VF04, 0(VI02)
+		nop		lq		VF05, 0(VI03)
+		mulx.xyzw	VF06, VF05, VF04x	nop
+		add.xyzw	VF08, VF08, VF06	nop
+		muly.xyzw	VF06, VF05, VF04y	nop
+		add.xyzw	VF09, VF09, VF06	nop
+		mulz.xyzw	VF06, VF05, VF04z	nop
+		add.xyzw	VF10, VF10, VF06	nop
+		mulw.xyzw	VF06, VF05, VF04w	nop
+		add.xyzw	VF11, VF11, VF06	nop
+		nop		iaddi		VI02, VI02, 1
+		nop		iaddi		VI03, VI03, 1
+		nop		ibne		VI02, VI06, VU1Gemm_Loop
+		nop		nop
+		nop		sq		VF08, 512(VI00)
+		nop		sq		VF09, 513(VI00)
+		nop		sq		VF10, 514(VI00)
+		nop		sq		VF11, 515(VI00)
+		nop[E]		nop
+		.align 4
+VU1Gemm_CodeEnd:

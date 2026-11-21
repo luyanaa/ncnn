@@ -3,6 +3,9 @@
 
 #include <float.h>
 #include <stdio.h>
+#if defined(__PS2__)
+#include <kernel.h>
+#endif
 #include <string.h>
 
 #ifdef __EMSCRIPTEN__
@@ -237,11 +240,25 @@ static std::vector<ncnn::Mat> parse_shape_list(char* s)
 
 int main(int argc, char** argv)
 {
+#if defined(__PS2__) || defined(__PSP__)
+    // a single core at a few hundred MHz: one iteration, one thread
+    int loop_count = 1;
+    int num_threads = 1;
+    int powersave = 0;
+#else
     int loop_count = 4;
     int num_threads = ncnn::get_physical_big_cpu_count();
     int powersave = 2;
+#endif
     int gpu_device = -1;
+#if defined(__PSP__)
+    // sceKernelDelayThread is the only sleep the emulator advances, and the
+    // runner reads the log on a fixed timeout. Ten seconds per model burns
+    // most of it before the first result row.
+    int cooling_down = 0;
+#else
     int cooling_down = 1;
+#endif
     char* model = 0;
     std::vector<ncnn::Mat> inputs;
 
@@ -378,6 +395,24 @@ int main(int argc, char** argv)
     else
     {
         // run default cases
+#if defined(__PS2__)
+        // keep the run short: the EE is ~295MHz and the GS console holds ~40 lines
+        benchmark("squeezenet", ncnn::Mat(227, 227, 3), opt, squeezenet_param_data);
+
+        benchmark("squeezenet_int8", ncnn::Mat(227, 227, 3), opt, squeezenet_int8_param_data);
+
+        benchmark("mobilenet", ncnn::Mat(224, 224, 3), opt, mobilenet_param_data);
+
+        benchmark("mobilenet_int8", ncnn::Mat(224, 224, 3), opt, mobilenet_int8_param_data);
+#elif defined(__PSP__)
+        benchmark("squeezenet", ncnn::Mat(227, 227, 3), opt, squeezenet_param_data);
+
+        benchmark("squeezenet_int8", ncnn::Mat(227, 227, 3), opt, squeezenet_int8_param_data);
+
+        benchmark("mobilenet", ncnn::Mat(224, 224, 3), opt, mobilenet_param_data);
+
+        benchmark("mobilenet_int8", ncnn::Mat(224, 224, 3), opt, mobilenet_int8_param_data);
+#else
         benchmark("squeezenet", ncnn::Mat(227, 227, 3), opt, squeezenet_param_data);
 
         benchmark("squeezenet_int8", ncnn::Mat(227, 227, 3), opt, squeezenet_int8_param_data);
@@ -449,11 +484,23 @@ int main(int argc, char** argv)
         benchmark("vision_transformer", ncnn::Mat(384, 384, 3), opt, vision_transformer_param_data);
 
         benchmark("FastestDet", ncnn::Mat(352, 352, 3), opt, FastestDet_param_data);
+#endif // __PS2__ / __PSP__
     }
 #if NCNN_VULKAN
     delete g_blob_vkallocator;
     delete g_staging_vkallocator;
 #endif // NCNN_VULKAN
+
+#if defined(__PS2__)
+    // returning from main makes ps2sdk reboot into OSDSYS and wipe the console
+    fprintf(stderr, "\nfinished, parked\n");
+    for (;;)
+        SleepThread();
+#endif
+#if defined(__PSP__)
+    // the runtime's atexit handler parks the thread and prints the marker
+    fprintf(stderr, "\n");
+#endif
 
     return 0;
 }

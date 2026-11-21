@@ -385,25 +385,66 @@ if((IOS AND CMAKE_OSX_ARCHITECTURES MATCHES "arm")
             message(WARNING "The compiler does not support armv8.2 fp16. NCNN_ARM82 will be OFF.")
         endif()
     endif()
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(psp)$")
+    # Allegrex is MIPS II plus a small integer extension. The scalar mips kernels
+    # are the baseline; NCNN_PSP_VFPU selects the VFPU ones. It is not the PS2,
+    # and it has neither MSA nor Loongson MMI.
+    set(NCNN_TARGET_ARCH mips)
+    set(PSP True)
+    set(NCNN_MSA OFF)
+    set(NCNN_MMI OFF)
+    option(NCNN_PSP_VFPU "optimize psp platform with vfpu" ON)
+    message(STATUS "Target is PlayStation Portable Allegrex")
+
+    # The PSP linker leaves every import stub as a relocation against its
+    # .lib.stub record plus the NID in the delay slot, and libcglue's imports are
+    # interleaved with libpspuser's, so one module's stubs are not contiguous.
+    # psp-fixup-imports misassigns the NID table in that case. The post-link step
+    # regroups the stubs per module, retargets the calls, then runs the fixup.
+    find_program(PSP_FIXUP_IMPORTS psp-fixup-imports)
+    if(PSP_FIXUP_IMPORTS)
+        # tools/psp-link.sh is one executable on purpose. cmake_link_script does
+        # not run a shell, so a "remove && compile && copy && regroup" rule is a
+        # single argv list: cmake -E remove -f then deletes every later
+        # argument (objects, libncnn.a, the psp-gcc name, the regroup script)
+        # and still exits 0. The script also adds -lstdc++, which psp-gcc does
+        # not pull in on its own.
+        set(CMAKE_C_LINK_EXECUTABLE
+            "${CMAKE_SOURCE_DIR}/tools/psp-link.sh <CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+        set(CMAKE_CXX_LINK_EXECUTABLE
+            "${CMAKE_SOURCE_DIR}/tools/psp-link.sh <CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+    else()
+        message(WARNING "psp-fixup-imports not found; PSP binaries will not boot")
+    endif()
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(mips)")
     set(NCNN_TARGET_ARCH mips)
 
-    check_cxx_compiler_flag("-mmsa" NCNN_COMPILER_SUPPORT_MIPS_MSA)
-
-    set(CMAKE_REQUIRED_FLAGS "-mloongson-mmi -I${CMAKE_CURRENT_SOURCE_DIR}/src/layer/mips")
-    check_cxx_source_compiles("#include \"loongson_mmi.h\"\nint32x2_t test(int16x4_t a, int16x4_t b) { return __mmi_pmaddhw(a, b); }" NCNN_COMPILER_SUPPORT_LOONGSON_MMI)
-
-    unset(CMAKE_REQUIRED_FLAGS)
-
-    if(NCNN_COMPILER_SUPPORT_MIPS_MSA)
-        option(NCNN_MSA "optimize mips platform with msa extension" ON)
+    # PlayStation 2 Emotion Engine (R5900) is a mips sub-variant, handled the same
+    # way as the other mips boards: shared "mips" target dir plus a feature option.
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "r5900")
+        set(PS2 True)
+        set(NCNN_MSA OFF)
+        set(NCNN_MMI OFF)
+        option(NCNN_PS2_MMI "optimize ps2 platform with EE MMI extension" ON)
+        message(STATUS "Target is PlayStation 2 Emotion Engine (r5900)")
     else()
-        message(WARNING "The compiler does not support msa extension. NCNN_MSA will be OFF.")
-    endif()
-    if(NCNN_COMPILER_SUPPORT_LOONGSON_MMI)
-        option(NCNN_MMI "optimize mips platform with loongson mmi extension" ON)
-    else()
-        message(WARNING "The compiler does not support loongson mmi extension. NCNN_MMI will be OFF.")
+        check_cxx_compiler_flag("-mmsa" NCNN_COMPILER_SUPPORT_MIPS_MSA)
+
+        set(CMAKE_REQUIRED_FLAGS "-mloongson-mmi -I${CMAKE_CURRENT_SOURCE_DIR}/src/layer/mips")
+        check_cxx_source_compiles("#include \"loongson_mmi.h\"\nint32x2_t test(int16x4_t a, int16x4_t b) { return __mmi_pmaddhw(a, b); }" NCNN_COMPILER_SUPPORT_LOONGSON_MMI)
+
+        unset(CMAKE_REQUIRED_FLAGS)
+
+        if(NCNN_COMPILER_SUPPORT_MIPS_MSA)
+            option(NCNN_MSA "optimize mips platform with msa extension" ON)
+        else()
+            message(WARNING "The compiler does not support msa extension. NCNN_MSA will be OFF.")
+        endif()
+        if(NCNN_COMPILER_SUPPORT_LOONGSON_MMI)
+            option(NCNN_MMI "optimize mips platform with loongson mmi extension" ON)
+        else()
+            message(WARNING "The compiler does not support loongson mmi extension. NCNN_MMI will be OFF.")
+        endif()
     endif()
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(loongarch64|loongarch32)")
     set(NCNN_TARGET_ARCH loongarch)

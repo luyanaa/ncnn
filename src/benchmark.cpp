@@ -26,6 +26,10 @@
 #include <unistd.h>   // sleep()
 #endif                // _WIN32
 
+#if defined(__PSP__)
+#include <pspthreadman.h>
+#endif
+
 #if NCNN_BENCHMARK
 #include "layer/convolution.h"
 #include "layer/convolutiondepthwise.h"
@@ -71,6 +75,11 @@ void sleep(unsigned long long int milliseconds)
 #else
 #ifdef _WIN32
     Sleep(milliseconds);
+#elif defined(__PSP__)
+    /* PSP's toolchain defines __unix__, and newlib's usleep waits on a clock
+       the emulator does not advance while a thread is blocked in it. The
+       kernel delay does, and it is what the runtime's heartbeat uses. */
+    sceKernelDelayThread((SceUInt)(milliseconds * 1000));
 #elif defined(__unix__) || defined(__APPLE__)
     usleep(milliseconds * 1000);
 #elif _POSIX_TIMERS

@@ -98,9 +98,35 @@ macro(ncnn_add_layer class)
 
         # look for arch specific implementation and append source
         # optimized implementation for armv7, aarch64 or x86
+        set(LAYER_ARCH_NAME ${NCNN_TARGET_ARCH})
         set(LAYER_ARCH_SRC ${CMAKE_CURRENT_SOURCE_DIR}/layer/${NCNN_TARGET_ARCH}/${name}_${NCNN_TARGET_ARCH}.cpp)
+        # ps2 is a mips sub-variant (like c906 for riscv): its kernels live next to the
+        # mips ones as <name>_mips_ps2.cpp and replace the generic mips implementation
+        if(NCNN_TARGET_ARCH STREQUAL "mips" AND NCNN_PS2_MMI)
+            set(LAYER_PS2_SRC ${CMAKE_CURRENT_SOURCE_DIR}/layer/mips/${name}_mips_ps2.cpp)
+            if(EXISTS ${LAYER_PS2_SRC})
+                set(LAYER_ARCH_NAME mips_ps2)
+                set(LAYER_ARCH_SRC ${LAYER_PS2_SRC})
+                # the ps2 implementation derives from the plain mips class and
+                # delegates int8 / bf16 / fallback paths to it, so that
+                # translation unit is still required (without being registered)
+                set(LAYER_PS2_BASE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/layer/mips/${name}_mips.cpp)
+                if(EXISTS ${LAYER_PS2_BASE_SRC})
+                    list(APPEND ncnn_SRCS ${LAYER_PS2_BASE_SRC})
+                endif()
+            endif()
+        endif()
+        # psp is the other mips sub-variant. <name>_mips_psp.cpp replaces the
+        # generic mips implementation the same way the ps2 kernels do.
+        if(NCNN_TARGET_ARCH STREQUAL "mips" AND NCNN_PSP_VFPU)
+            set(LAYER_PSP_SRC ${CMAKE_CURRENT_SOURCE_DIR}/layer/mips/${name}_mips_psp.cpp)
+            if(EXISTS ${LAYER_PSP_SRC})
+                set(LAYER_ARCH_NAME mips_psp)
+                set(LAYER_ARCH_SRC ${LAYER_PSP_SRC})
+            endif()
+        endif()
         if(EXISTS ${LAYER_ARCH_SRC})
-            set(WITH_LAYER_${name}_${NCNN_TARGET_ARCH} 1)
+            set(WITH_LAYER_${name}_${LAYER_ARCH_NAME} 1)
             list(APPEND ncnn_SRCS ${LAYER_ARCH_SRC})
         endif()
 
@@ -119,11 +145,11 @@ macro(ncnn_add_layer class)
         source_group ("sources\\\\layers" FILES "${CMAKE_CURRENT_SOURCE_DIR}/layer/${name}.cpp")
     endif()
 
-    if(WITH_LAYER_${name}_${NCNN_TARGET_ARCH})
-        set(layer_declaration "${layer_declaration}#include \"layer/${NCNN_TARGET_ARCH}/${name}_${NCNN_TARGET_ARCH}.h\"\n")
-        set(layer_declaration "${layer_declaration}namespace ncnn { DEFINE_LAYER_CREATOR(${class}_${NCNN_TARGET_ARCH}) }\n")
+    if(WITH_LAYER_${name}_${LAYER_ARCH_NAME})
+        set(layer_declaration "${layer_declaration}#include \"layer/${NCNN_TARGET_ARCH}/${name}_${LAYER_ARCH_NAME}.h\"\n")
+        set(layer_declaration "${layer_declaration}namespace ncnn { DEFINE_LAYER_CREATOR(${class}_${LAYER_ARCH_NAME}) }\n")
 
-        source_group ("sources\\\\layers\\\\${NCNN_TARGET_ARCH}" FILES "${CMAKE_CURRENT_SOURCE_DIR}/layer/${NCNN_TARGET_ARCH}/${name}_${NCNN_TARGET_ARCH}.cpp")
+        source_group ("sources\\\\layers\\\\${NCNN_TARGET_ARCH}" FILES "${CMAKE_CURRENT_SOURCE_DIR}/layer/${NCNN_TARGET_ARCH}/${name}_${LAYER_ARCH_NAME}.cpp")
     endif()
 
     if(WITH_LAYER_${name}_vulkan)
@@ -153,8 +179,8 @@ macro(ncnn_add_layer class)
         set(layer_registry "${layer_registry}#if NCNN_STRING\n{\"${class}\", 0},\n#else\n{0},\n#endif\n")
     endif()
 
-    if(WITH_LAYER_${name}_${NCNN_TARGET_ARCH})
-        set(layer_registry_arch "${layer_registry_arch}#if NCNN_STRING\n{\"${class}\", ${class}_${NCNN_TARGET_ARCH}_layer_creator},\n#else\n{${class}_${NCNN_TARGET_ARCH}_layer_creator},\n#endif\n")
+    if(WITH_LAYER_${name}_${LAYER_ARCH_NAME})
+        set(layer_registry_arch "${layer_registry_arch}#if NCNN_STRING\n{\"${class}\", ${class}_${LAYER_ARCH_NAME}_layer_creator},\n#else\n{${class}_${LAYER_ARCH_NAME}_layer_creator},\n#endif\n")
     else()
         set(layer_registry_arch "${layer_registry_arch}#if NCNN_STRING\n{\"${class}\", 0},\n#else\n{0},\n#endif\n")
     endif()

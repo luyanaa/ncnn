@@ -58,6 +58,39 @@ configure_file(benchncnn_param_data.h.in ${CMAKE_CURRENT_BINARY_DIR}/benchncnn_p
 add_executable(benchncnn benchncnn.cpp)
 target_link_libraries(benchncnn PRIVATE ncnn)
 
+if(PS2)
+    # PS2 EE runtime: reroute newlib's _write to the GS debug console, which
+    # needs ps2sdk's libdebug (init_scr/scr_printf)
+    target_sources(benchncnn PRIVATE ps2/ps2_runtime.c)
+    target_link_libraries(benchncnn PRIVATE "-ldebug")
+endif()
+
+if(PSP)
+    # PSP runtime: replace newlib _write so printf reaches sceKernelPrintf,
+    # which PPSSPP copies into its --log file. UART4 is not emulated.
+    target_sources(benchncnn PRIVATE psp/psp_runtime.c)
+    # libpspkernel.a exports snprintf and the string functions as kernel
+    # stubs, and the psp-g++ spec moves -lpspkernel ahead of -lc, so the stubs
+    # win. They use the kernel calling convention, which faults a newlib call.
+    # Linking the newlib objects directly puts a real definition first.
+    file(GLOB psp_newlib_src /usr/local/pspdev/psp/lib/libc.a)
+    if(psp_newlib_src)
+        set(psp_newlib_objs)
+        foreach(fn snprintf memcpy memset memcmp memmove strlen strcmp strchr)
+            set(obj ${CMAKE_CURRENT_BINARY_DIR}/psp_newlib_${fn}.o)
+            add_custom_command(OUTPUT ${obj}
+                COMMAND ${CMAKE_AR} x /usr/local/pspdev/psp/lib/libc.a libc_a-${fn}.o
+                COMMAND ${CMAKE_COMMAND} -E rename libc_a-${fn}.o ${obj}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                DEPENDS /usr/local/pspdev/psp/lib/libc.a
+                VERBATIM)
+            list(APPEND psp_newlib_objs ${obj})
+        endforeach()
+        target_sources(benchncnn PRIVATE ${psp_newlib_objs})
+    endif()
+    target_link_libraries(benchncnn PRIVATE "-lpspuser -lpspkernel")
+endif()
+
 target_include_directories(benchncnn PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
